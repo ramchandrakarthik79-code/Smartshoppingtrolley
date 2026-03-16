@@ -9,381 +9,488 @@
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script src="https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; border: 0 solid #e5e7eb; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
     :root {
-      --background: hsl(210, 20%, 98%);
-      --foreground: hsl(215, 25%, 15%);
-      --card: hsl(0, 0%, 100%);
-      --card-foreground: hsl(215, 25%, 15%);
-      --primary: hsl(217, 91%, 50%);
-      --primary-foreground: hsl(0, 0%, 100%);
-      --secondary: hsl(214, 32%, 91%);
-      --secondary-foreground: hsl(215, 25%, 15%);
-      --muted: hsl(214, 20%, 94%);
-      --muted-foreground: hsl(215, 15%, 47%);
-      --destructive: hsl(0, 84%, 60%);
-      --destructive-foreground: hsl(0, 0%, 100%);
-      --success: hsl(142, 71%, 45%);
-      --success-foreground: hsl(0, 0%, 100%);
-      --warning: hsl(38, 92%, 50%);
-      --warning-foreground: hsl(0, 0%, 100%);
-      --border: hsl(214, 25%, 88%);
-      --radius: 0.75rem;
-    }
-    body { font-family: 'Inter', sans-serif; background: var(--background); color: var(--foreground); }
-    .border { border: 1px solid var(--border); }
-    .border-t { border-top: 1px solid var(--border); }
-
-    /* Flash animation */
-    @keyframes flash { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
-    .flash-alert { animation: flash 1s ease-in-out infinite; }
-
-    /* Slide in */
-    @keyframes slideIn { from { transform: translateY(-10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    .slide-in { animation: slideIn 0.3s ease-out; }
-
-    /* Cart item enter */
-    @keyframes cartEnter { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-    .cart-item-enter { animation: cartEnter 0.3s ease-out; }
-
-    /* Toast styles */
-    .toast-container { position: fixed; top: 70px; right: 16px; z-index: 100; display: flex; flex-direction: column; gap: 8px; max-width: 350px; }
-    .toast { padding: 12px 16px; border-radius: 10px; font-size: 14px; font-weight: 600; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: slideIn 0.3s ease-out; }
-    .toast-success { background: var(--success); }
-    .toast-error { background: var(--destructive); }
-    .toast-info { background: var(--primary); }
-
-    /* Switch styles */
-    .switch { width: 44px; height: 24px; border-radius: 12px; background: var(--muted); cursor: pointer; position: relative; transition: background 0.2s; display: inline-block; }
-    .switch.active { background: var(--primary); }
-    .switch::after { content: ''; position: absolute; width: 20px; height: 20px; border-radius: 50%; background: white; top: 2px; left: 2px; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
-    .switch.active::after { transform: translateX(20px); }
-
-    /* Button base */
-    .btn { display: inline-flex; align-items: center; justify-content: center; font-weight: 700; border-radius: var(--radius); cursor: pointer; transition: all 0.15s; border: none; font-family: inherit; }
-    .btn:active { transform: scale(0.98); }
-
-    /* ==================== WELCOME SCREEN ==================== */
-    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400;500;600;700;800&display=swap');
-
-    @keyframes welcomeFadeOut {
-      0% { opacity: 1; transform: scale(1); }
-      100% { opacity: 0; transform: scale(1.04); pointer-events: none; }
-    }
-    @keyframes floatUp {
-      from { opacity: 0; transform: translateY(28px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes spinSlow {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
-    @keyframes shimmer {
-      0% { background-position: -200% center; }
-      100% { background-position: 200% center; }
-    }
-    @keyframes pulseRing {
-      0% { transform: scale(0.9); opacity: 0.7; }
-      50% { transform: scale(1.1); opacity: 0.3; }
-      100% { transform: scale(0.9); opacity: 0.7; }
-    }
-    @keyframes blink {
-      0%, 100% { opacity: 1; } 50% { opacity: 0.4; }
-    }
-    @keyframes waveText {
-      0%, 100% { transform: translateY(0); }
-      50% { transform: translateY(-6px); }
+      --bg: #f5f0e8;
+      --bg2: #ede8de;
+      --card: #fdfaf4;
+      --card2: #f7f3eb;
+      --green: #1a3a2a;
+      --green2: #2d5a3d;
+      --green3: #3d7a52;
+      --green-light: rgba(26,58,42,0.08);
+      --gold: #c9972a;
+      --gold2: #e8b84b;
+      --gold-light: rgba(201,151,42,0.15);
+      --cream: #f5f0e8;
+      --text: #1a1a1a;
+      --text2: #4a4a3a;
+      --text3: #7a7a6a;
+      --red: #c0392b;
+      --red-light: rgba(192,57,43,0.1);
+      --border: rgba(26,58,42,0.12);
+      --shadow: 0 4px 24px rgba(26,58,42,0.1);
+      --shadow-lg: 0 12px 48px rgba(26,58,42,0.16);
+      --radius: 16px;
+      --radius-sm: 10px;
     }
 
-    #welcome-screen {
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
       position: fixed;
       inset: 0;
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      background: #fdf8f0;
-    }
-    #welcome-screen.fade-out {
-      animation: welcomeFadeOut 0.55s cubic-bezier(0.4,0,0.2,1) forwards;
-    }
-    .ws-bg-blob {
-      position: absolute;
-      border-radius: 50%;
-      filter: blur(60px);
+      background-image:
+        radial-gradient(ellipse 80% 50% at 20% 10%, rgba(201,151,42,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(26,58,42,0.06) 0%, transparent 60%);
       pointer-events: none;
-    }
-    .ws-content {
-      position: relative;
-      z-index: 2;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0;
-      padding: 0 24px;
-      text-align: center;
-    }
-    .ws-ring-wrap {
-      position: relative;
-      width: 120px;
-      height: 120px;
-      margin-bottom: 28px;
-      opacity: 0;
-      animation: floatUp 0.7s cubic-bezier(0.34,1.56,0.64,1) 0.1s forwards;
-    }
-    .ws-ring {
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      border: 2px dashed rgba(210, 140, 60, 0.35);
-      animation: spinSlow 10s linear infinite;
-    }
-    .ws-ring-inner {
-      position: absolute;
-      inset: 12px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #f9a825, #f57c00);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 8px 32px rgba(245, 124, 0, 0.3), 0 2px 8px rgba(0,0,0,0.08);
-    }
-    .ws-ring-pulse {
-      position: absolute;
-      inset: 6px;
-      border-radius: 50%;
-      border: 3px solid rgba(249, 168, 37, 0.4);
-      animation: pulseRing 2.5s ease-in-out infinite;
-    }
-    .ws-emoji {
-      font-size: 40px;
-      line-height: 1;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
-    }
-    .ws-tagline {
-      font-family: 'Playfair Display', Georgia, serif;
-      font-size: clamp(13px, 3.5vw, 16px);
-      color: #b07d3a;
-      letter-spacing: 0.22em;
-      text-transform: uppercase;
-      margin-bottom: 10px;
-      opacity: 0;
-      animation: floatUp 0.6s ease-out 0.35s forwards;
-    }
-    .ws-title {
-      font-family: 'Playfair Display', Georgia, serif;
-      font-size: clamp(36px, 9vw, 58px);
-      font-weight: 700;
-      color: #2c1a0e;
-      line-height: 1.1;
-      margin-bottom: 6px;
-      opacity: 0;
-      animation: floatUp 0.6s ease-out 0.5s forwards;
-    }
-    .ws-title span {
-      background: linear-gradient(90deg, #f57c00, #f9a825, #e65100, #f57c00);
-      background-size: 300% auto;
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      animation: shimmer 3s linear infinite;
-    }
-    .ws-subtitle {
-      font-size: clamp(15px, 4vw, 19px);
-      font-weight: 300;
-      color: #6b4c2a;
-      margin-bottom: 36px;
-      letter-spacing: 0.01em;
-      line-height: 1.5;
-      opacity: 0;
-      animation: floatUp 0.6s ease-out 0.65s forwards;
-    }
-    .ws-greeting-row {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 44px;
-      opacity: 0;
-      animation: floatUp 0.6s ease-out 0.8s forwards;
-    }
-    .ws-greeting-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(245, 124, 0, 0.1);
-      border: 1px solid rgba(245, 124, 0, 0.25);
-      border-radius: 9999px;
-      padding: 8px 18px;
-      font-size: 14px;
-      color: #c26a00;
-      font-weight: 500;
-    }
-    .ws-dot {
-      width: 7px; height: 7px; border-radius: 50%;
-      background: #f57c00;
-      animation: blink 1.4s ease-in-out infinite;
-    }
-    .ws-btn {
-      position: relative;
-      overflow: hidden;
-      background: linear-gradient(135deg, #f57c00, #f9a825);
-      color: #fff;
-      border: none;
-      border-radius: 16px;
-      padding: 16px 48px;
-      font-size: 16px;
-      font-weight: 700;
-      font-family: 'Inter', sans-serif;
-      cursor: pointer;
-      box-shadow: 0 6px 24px rgba(245,124,0,0.35), 0 2px 6px rgba(0,0,0,0.1);
-      transition: transform 0.15s, box-shadow 0.15s;
-      opacity: 0;
-      animation: floatUp 0.6s ease-out 1s forwards;
-      letter-spacing: 0.02em;
-    }
-    .ws-btn::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, rgba(255,255,255,0.22), transparent);
-      pointer-events: none;
-    }
-    .ws-btn:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 10px 32px rgba(245,124,0,0.45), 0 3px 8px rgba(0,0,0,0.12); }
-    .ws-btn:active { transform: scale(0.98); }
-    .ws-wave-letters span {
-      display: inline-block;
-    }
-    .ws-footer {
-      position: absolute;
-      bottom: 24px;
-      font-size: 12px;
-      color: #c4a882;
-      letter-spacing: 0.08em;
-      opacity: 0;
-      animation: floatUp 0.6s ease-out 1.2s forwards;
+      z-index: 0;
     }
 
-    /* SVG icons inline */
-    .icon { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
-    .icon-lg { width: 20px; height: 20px; }
+    /* WELCOME */
+    @keyframes welcomeFadeIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes welcomeFadeOut { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(1.04); } }
+    @keyframes shimmer { 0% { background-position: -200% center; } 100% { background-position: 200% center; } }
+    @keyframes floatLeaf { 0%,100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-18px) rotate(6deg); } }
+    @keyframes pulse { 0%,100%{transform:scale(1);opacity:1;} 50%{transform:scale(1.05);opacity:0.85;} }
+
+    .welcome-screen {
+      position: fixed; inset: 0; z-index: 200;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: linear-gradient(160deg, #0f2318 0%, #1a3a2a 40%, #2d5a3d 100%);
+      overflow: hidden;
+    }
+    .welcome-screen.exit { animation: welcomeFadeOut 0.7s ease-in forwards; }
+    .welcome-bg-pattern {
+      position: absolute; inset: 0; opacity: 0.06;
+      background-image: repeating-linear-gradient(45deg, #c9972a 0, #c9972a 1px, transparent 0, transparent 50%);
+      background-size: 24px 24px;
+    }
+    .welcome-glow {
+      position: absolute; width: 500px; height: 500px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(201,151,42,0.2) 0%, transparent 70%);
+      top: 50%; left: 50%; transform: translate(-50%, -50%);
+      animation: pulse 3s ease-in-out infinite;
+    }
+    .welcome-leaf { position: absolute; font-size: 32px; animation: floatLeaf 4s ease-in-out infinite; opacity: 0.3; }
+    .welcome-content { position: relative; z-index: 2; text-align: center; padding: 40px 24px; }
+    .welcome-icon {
+      font-size: 72px; display: block; margin-bottom: 24px;
+      animation: welcomeFadeIn 0.8s ease-out;
+      filter: drop-shadow(0 8px 24px rgba(201,151,42,0.4));
+    }
+    .welcome-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(32px, 8vw, 52px); font-weight: 900;
+      color: var(--cream); line-height: 1.1;
+      animation: welcomeFadeIn 0.8s 0.15s both ease-out; letter-spacing: -0.02em;
+    }
+    .welcome-gold {
+      background: linear-gradient(90deg, #c9972a, #e8b84b, #c9972a);
+      background-size: 200% auto;
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      animation: shimmer 3s linear infinite, welcomeFadeIn 0.8s 0.15s both ease-out;
+    }
+    .welcome-subtitle {
+      margin-top: 12px; font-size: 16px; font-weight: 300;
+      color: rgba(245,240,232,0.65); letter-spacing: 0.04em;
+      animation: welcomeFadeIn 0.8s 0.3s both ease-out;
+    }
+    .welcome-greeting {
+      margin-top: 32px; font-family: 'Playfair Display', serif;
+      font-size: clamp(18px,5vw,26px); color: rgba(245,240,232,0.9);
+      font-style: italic; animation: welcomeFadeIn 0.8s 0.45s both ease-out;
+    }
+    .welcome-divider {
+      margin: 20px auto; width: 60px; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold2), transparent);
+      animation: welcomeFadeIn 0.8s 0.5s both ease-out;
+    }
+    .welcome-tagline {
+      font-size: 14px; color: rgba(245,240,232,0.5);
+      letter-spacing: 0.1em; text-transform: uppercase;
+      animation: welcomeFadeIn 0.8s 0.55s both ease-out;
+    }
+    .welcome-btn {
+      margin-top: 48px;
+      display: inline-flex; align-items: center; gap: 10px;
+      background: linear-gradient(135deg, #c9972a, #e8b84b);
+      color: #0f2318; font-family: 'DM Sans', sans-serif;
+      font-size: 15px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
+      padding: 16px 36px; border-radius: 100px; border: none; cursor: pointer;
+      box-shadow: 0 8px 32px rgba(201,151,42,0.35);
+      animation: welcomeFadeIn 0.8s 0.7s both ease-out;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .welcome-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(201,151,42,0.45); }
+    .welcome-btn:active { transform: scale(0.97); }
+    .welcome-time {
+      margin-top: 20px; font-size: 13px; color: rgba(245,240,232,0.35);
+      animation: welcomeFadeIn 0.8s 0.85s both ease-out; letter-spacing: 0.06em;
+    }
+
+    /* HEADER */
+    @keyframes headerSlide { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .app-header {
+      position: sticky; top: 0; z-index: 30;
+      background: var(--green);
+      border-bottom: 1px solid rgba(201,151,42,0.2);
+      padding: 0 20px; height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 4px 24px rgba(26,58,42,0.25);
+      animation: headerSlide 0.5s ease-out;
+    }
+    .header-logo { display: flex; align-items: center; gap: 10px; }
+    .header-logo span { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: var(--cream); letter-spacing: -0.01em; }
+    .header-logo em { font-family: 'Playfair Display', serif; font-style: italic; color: var(--gold2); }
+    .header-badge {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(201,151,42,0.15); border: 1px solid rgba(201,151,42,0.3);
+      border-radius: 100px; padding: 4px 12px;
+      font-size: 12px; font-weight: 600; color: var(--gold2); letter-spacing: 0.04em;
+    }
+    .header-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--gold2); animation: pulse 2s infinite; }
+
+    /* MAIN */
+    .app-main {
+      position: relative; z-index: 1;
+      max-width: 520px; margin: 0 auto;
+      padding: 20px 16px 120px;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+
+    /* CARDS */
+    @keyframes cardIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+    .card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px;
+      box-shadow: var(--shadow); animation: cardIn 0.4s ease-out both;
+    }
+    .card-label {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--text3); margin-bottom: 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    /* MODE TOGGLE */
+    .mode-row { display: flex; align-items: center; justify-content: space-between; }
+    .mode-labels { display: flex; align-items: center; gap: 12px; }
+    .mode-text { font-size: 13px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; transition: color 0.2s; }
+    .switch { width: 48px; height: 26px; border-radius: 13px; background: rgba(26,58,42,0.15); cursor: pointer; position: relative; transition: background 0.25s; flex-shrink: 0; }
+    .switch.active { background: var(--green2); }
+    .switch::after { content: ''; position: absolute; width: 22px; height: 22px; border-radius: 50%; background: white; top: 2px; left: 2px; transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1); box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+    .switch.active::after { transform: translateX(22px); }
+    .status-pill { display: inline-flex; align-items: center; gap: 6px; border-radius: 100px; padding: 5px 14px; font-size: 12px; font-weight: 600; letter-spacing: 0.03em; }
+    .status-demo { background: rgba(201,151,42,0.12); color: var(--gold); border: 1px solid rgba(201,151,42,0.25); }
+    .status-live { background: rgba(45,90,61,0.12); color: var(--green2); border: 1px solid rgba(45,90,61,0.25); }
+    .status-warn { background: var(--red-light); color: var(--red); border: 1px solid rgba(192,57,43,0.2); }
+    .status-wait { background: rgba(26,26,26,0.06); color: var(--text3); border: 1px solid var(--border); }
+    .demo-note { margin-top: 10px; font-size: 12px; color: var(--text3); background: rgba(201,151,42,0.06); border-radius: 8px; padding: 8px 12px; border-left: 3px solid var(--gold2); }
+
+    /* ALERT BANNERS */
+    @keyframes alertPulse { 0%,100%{opacity:1;} 50%{opacity:0.7;} }
+    .alert-banner { border-radius: var(--radius-sm); padding: 14px 18px; font-size: 14px; font-weight: 600; text-align: center; animation: cardIn 0.3s ease-out, alertPulse 1.5s ease-in-out infinite; display: flex; align-items: center; justify-content: center; gap: 10px; }
+    .alert-mismatch { background: linear-gradient(135deg, #c0392b, #e74c3c); color: white; box-shadow: 0 4px 16px rgba(192,57,43,0.3); }
+    .alert-stationary { background: linear-gradient(135deg, #b8860b, #c9972a); color: white; box-shadow: 0 4px 16px rgba(201,151,42,0.3); }
+
+    /* SCAN BUTTON */
+    .scan-btn {
+      width: 100%; background: linear-gradient(135deg, var(--green), var(--green2));
+      color: var(--cream); border: none; border-radius: var(--radius); padding: 20px;
+      font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; letter-spacing: 0.02em;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 12px;
+      box-shadow: 0 6px 24px rgba(26,58,42,0.25); transition: transform 0.18s, box-shadow 0.18s;
+      position: relative; overflow: hidden;
+    }
+    .scan-btn::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, transparent 40%, rgba(201,151,42,0.12)); }
+    .scan-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(26,58,42,0.3); }
+    .scan-btn:active { transform: scale(0.98); }
+
+    /* DEMO BUTTONS */
+    .demo-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .demo-btn { border-radius: var(--radius-sm); padding: 12px 10px; font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid; display: flex; align-items: center; justify-content: center; gap: 6px; transition: transform 0.15s, box-shadow 0.15s; }
+    .demo-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .demo-btn:active { transform: scale(0.97); }
+    .demo-btn-red { background: var(--red-light); color: var(--red); border-color: rgba(192,57,43,0.2); }
+    .demo-btn-gold { background: var(--gold-light); color: var(--gold); border-color: rgba(201,151,42,0.3); }
+
+    /* SENSOR */
+    .sensor-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .sensor-tile { border-radius: var(--radius-sm); padding: 14px; text-align: center; background: var(--card2); border: 1px solid var(--border); transition: background 0.3s; }
+    .sensor-tile.alert { background: var(--red-light); border-color: rgba(192,57,43,0.2); }
+    .sensor-tile-label { font-size: 11px; color: var(--text3); font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 6px; }
+    .sensor-tile-val { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--text); }
+    .sensor-tile.alert .sensor-tile-val { color: var(--red); }
+    .sensor-status { margin-top: 12px; border-radius: 8px; padding: 10px 14px; text-align: center; font-size: 13px; font-weight: 700; letter-spacing: 0.03em; transition: all 0.3s; }
+    .sensor-ok { background: rgba(45,90,61,0.1); color: var(--green2); }
+    .sensor-err { background: var(--red-light); color: var(--red); }
+
+    /* CART ITEMS */
+    .cart-item { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: var(--radius-sm); background: var(--card2); border: 1px solid var(--border); transition: all 0.2s; animation: cartItemIn 0.35s ease-out both; }
+    @keyframes cartItemIn { from { opacity:0; transform: translateX(-16px); } to { opacity:1; transform: translateX(0); } }
+    .cart-item:hover { box-shadow: 0 4px 12px rgba(26,58,42,0.08); }
+    .cart-item-emoji { font-size: 28px; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; background: var(--green-light); border-radius: 10px; flex-shrink: 0; }
+    .cart-item-info { flex: 1; min-width: 0; }
+    .cart-item-name { font-size: 14px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cart-item-meta { font-size: 12px; color: var(--text3); margin-top: 2px; }
+    .cart-item-price { font-size: 13px; font-weight: 700; color: var(--green2); margin-top: 2px; }
+    .cart-qty-row { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .qty-btn { width: 30px; height: 30px; border-radius: 8px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 700; transition: transform 0.15s; }
+    .qty-btn:active { transform: scale(0.9); }
+    .qty-btn-minus { background: rgba(26,58,42,0.08); color: var(--green); }
+    .qty-btn-plus { background: var(--green); color: var(--cream); }
+    .qty-btn-del { background: var(--red-light); color: var(--red); margin-left: 4px; font-size: 14px; }
+    .qty-num { width: 22px; text-align: center; font-size: 14px; font-weight: 700; }
+    .cart-empty { text-align: center; padding: 40px 20px; color: var(--text3); }
+    .cart-empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.4; }
+    .cart-empty-text { font-size: 14px; }
+    .cart-summary { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border); }
+    .cart-summary-row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 6px; color: var(--text3); }
+    .cart-summary-row span:last-child { font-weight: 600; color: var(--text); }
+    .cart-total-row { display: flex; justify-content: space-between; font-size: 18px; font-family: 'Playfair Display', serif; font-weight: 700; padding-top: 10px; border-top: 1px solid var(--border); margin-top: 8px; }
+    .cart-total-row span:last-child { color: var(--green2); }
+    .checkout-btn { margin-top: 18px; width: 100%; background: linear-gradient(135deg, var(--gold), var(--gold2)); color: #0f2318; border: none; border-radius: var(--radius); padding: 16px; font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 700; cursor: pointer; box-shadow: 0 6px 20px rgba(201,151,42,0.3); transition: transform 0.18s, box-shadow 0.18s; letter-spacing: 0.01em; }
+    .checkout-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(201,151,42,0.4); }
+    .checkout-btn:active { transform: scale(0.98); }
+
+    /* BUDGET PILL */
+    @keyframes budgetIn { from { opacity:0; transform: translateX(60px); } to { opacity:1; transform: translateX(0); } }
+    .budget-pill { position: fixed; bottom: 28px; right: 16px; z-index: 40; background: var(--green); border-radius: 16px; padding: 12px 16px; box-shadow: 0 8px 32px rgba(26,58,42,0.3); border: 1px solid rgba(201,151,42,0.25); animation: budgetIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both; cursor: pointer; transition: transform 0.2s; min-width: 150px; }
+    .budget-pill:hover { transform: scale(1.03); }
+    .budget-pill-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+    .budget-pill-label { font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(245,240,232,0.5); }
+    .budget-pill-edit { font-size: 11px; color: var(--gold2); cursor: pointer; }
+    .budget-pill-remaining { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--cream); }
+    .budget-pill-remaining.warn { color: #e8a04b; }
+    .budget-pill-remaining.over { color: #e87070; }
+    .budget-bar-bg { margin-top: 8px; height: 4px; border-radius: 2px; background: rgba(245,240,232,0.15); overflow: hidden; }
+    .budget-bar-fill { height: 100%; border-radius: 2px; transition: width 0.5s cubic-bezier(0.4,0,0.2,1); }
+    .budget-bar-ok { background: linear-gradient(90deg, var(--gold), var(--gold2)); }
+    .budget-bar-warn { background: linear-gradient(90deg, #e8a04b, #e8b84b); }
+    .budget-bar-over { background: linear-gradient(90deg, #c0392b, #e74c3c); }
+    .budget-sub { font-size: 11px; color: rgba(245,240,232,0.4); margin-top: 5px; }
+
+    /* BUDGET MODAL */
+    .budget-modal-overlay { position: fixed; inset: 0; z-index: 100; background: rgba(15,35,24,0.6); backdrop-filter: blur(4px); display: flex; align-items: flex-end; justify-content: center; padding: 16px; }
+    @keyframes sheetUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .budget-modal { width: 100%; max-width: 420px; background: var(--card); border-radius: 24px 24px 16px 16px; padding: 28px 24px; animation: sheetUp 0.4s cubic-bezier(0.34,1.26,0.64,1); box-shadow: 0 -8px 40px rgba(26,58,42,0.2); }
+    .budget-modal h3 { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--green); margin-bottom: 8px; }
+    .budget-modal p { font-size: 13px; color: var(--text3); margin-bottom: 20px; }
+    .budget-input-wrap { position: relative; margin-bottom: 20px; }
+    .budget-input-prefix { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: var(--green2); }
+    .budget-input { width: 100%; padding: 16px 16px 16px 40px; border: 2px solid var(--border); border-radius: var(--radius-sm); font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; color: var(--green); background: var(--card2); outline: none; transition: border-color 0.2s; }
+    .budget-input:focus { border-color: var(--green2); }
+    .budget-modal-btn { width: 100%; background: var(--green); color: var(--cream); border: none; border-radius: var(--radius-sm); padding: 16px; font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; letter-spacing: 0.04em; transition: background 0.2s; }
+    .budget-modal-btn:hover { background: var(--green2); }
+
+    /* CHECKOUT MODAL */
+    .modal-overlay { position: fixed; inset: 0; z-index: 100; background: rgba(15,35,24,0.6); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; padding: 16px; }
+    @keyframes modalIn { from { opacity:0; transform: scale(0.92) translateY(20px); } to { opacity:1; transform: scale(1) translateY(0); } }
+    .modal-box { width: 100%; max-width: 440px; background: var(--card); border-radius: 24px; overflow: hidden; box-shadow: var(--shadow-lg); animation: modalIn 0.4s cubic-bezier(0.34,1.1,0.64,1); max-height: 90vh; overflow-y: auto; }
+    .modal-header { background: linear-gradient(135deg, var(--green), var(--green2)); padding: 28px 24px 24px; position: relative; }
+    .modal-header h2 { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; color: var(--cream); margin-bottom: 4px; }
+    .modal-header p { font-size: 13px; color: rgba(245,240,232,0.6); }
+    .modal-close { position: absolute; top: 20px; right: 20px; background: rgba(245,240,232,0.15); border: none; color: var(--cream); border-radius: 50%; width: 36px; height: 36px; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+    .modal-close:hover { background: rgba(245,240,232,0.25); }
+    .modal-body { padding: 24px; }
+    .bill-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .bill-table th { text-align: left; padding: 8px 10px; background: var(--card2); color: var(--text3); font-weight: 600; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; }
+    .bill-table th:last-child { text-align: right; }
+    .bill-table td { padding: 10px; border-top: 1px solid var(--border); color: var(--text); font-weight: 500; }
+    .bill-table td:last-child { text-align: right; font-weight: 700; color: var(--green2); }
+    .bill-total-section { margin-top: 16px; padding-top: 14px; border-top: 2px solid var(--border); }
+    .bill-row { display: flex; justify-content: space-between; font-size: 13px; color: var(--text3); margin-bottom: 6px; }
+    .bill-row span:last-child { font-weight: 600; color: var(--text); }
+    .bill-grand { display: flex; justify-content: space-between; font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; padding-top: 12px; border-top: 1px solid var(--border); margin-top: 10px; }
+    .bill-grand span:last-child { color: var(--green2); }
+
+    /* QR */
+    .qr-section { margin-top: 24px; padding: 20px; background: var(--card2); border-radius: var(--radius-sm); border: 1px solid var(--border); text-align: center; }
+    .qr-section h4 { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 700; color: var(--green); margin-bottom: 6px; }
+    .qr-section p { font-size: 12px; color: var(--text3); margin-bottom: 16px; }
+    .qr-canvas-wrap { display: inline-flex; align-items: center; justify-content: center; background: white; padding: 12px; border-radius: 12px; box-shadow: 0 4px 16px rgba(26,58,42,0.1); margin-bottom: 12px; }
+    .qr-label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text3); }
+    .qr-verify-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(45,90,61,0.1); border: 1px solid rgba(45,90,61,0.2); border-radius: 100px; padding: 6px 14px; font-size: 12px; font-weight: 600; color: var(--green2); margin-top: 10px; }
+    .done-btn { width: 100%; background: linear-gradient(135deg, var(--green), var(--green2)); color: var(--cream); border: none; border-radius: var(--radius-sm); padding: 16px; font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 20px; transition: transform 0.18s, box-shadow 0.18s; letter-spacing: 0.02em; box-shadow: 0 4px 16px rgba(26,58,42,0.2); }
+    .done-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(26,58,42,0.25); }
+
+    /* CONFETTI */
+    .confetti-container { position: fixed; inset: 0; pointer-events: none; z-index: 999; overflow: hidden; }
+    .confetti-piece { position: absolute; width: 10px; height: 10px; top: -20px; animation: confettiFall linear forwards; }
+    @keyframes confettiFall { 0% { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; } 80% { opacity: 1; } 100% { transform: translateY(110vh) rotate(720deg) scale(0.5); opacity: 0; } }
+
+    /* SCANNER */
+    .scanner-overlay { position: fixed; inset: 0; z-index: 150; background: #0f2318; display: flex; flex-direction: column; }
+    .scanner-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; background: rgba(15,35,24,0.9); border-bottom: 1px solid rgba(201,151,42,0.2); }
+    .scanner-header h2 { font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 700; color: var(--cream); }
+    .scanner-close { background: rgba(245,240,232,0.1); border: 1px solid rgba(245,240,232,0.2); color: var(--cream); border-radius: 50%; width: 36px; height: 36px; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; }
+    .scanner-video-wrap { position: relative; flex: 1; overflow: hidden; }
+    .scanner-video { width: 100%; height: 100%; object-fit: cover; }
+    .scanner-frame-wrap { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+    .scanner-frame { width: 240px; height: 180px; border-radius: 16px; position: relative; }
+    .scanner-frame::before, .scanner-frame::after { content: ''; position: absolute; width: 40px; height: 40px; border-color: var(--gold2); border-style: solid; }
+    .scanner-frame::before { top: 0; left: 0; border-width: 3px 0 0 3px; border-radius: 12px 0 0 0; }
+    .scanner-frame::after { bottom: 0; right: 0; border-width: 0 3px 3px 0; border-radius: 0 0 12px 0; }
+    .scanner-corner-tr { position: absolute; width: 40px; height: 40px; border-color: var(--gold2); border-style: solid; top: 0; right: 0; border-width: 3px 3px 0 0; border-radius: 0 12px 0 0; }
+    .scanner-corner-bl { position: absolute; width: 40px; height: 40px; border-color: var(--gold2); border-style: solid; bottom: 0; left: 0; border-width: 0 0 3px 3px; border-radius: 0 0 0 12px; }
+    @keyframes scanLine { 0% { top: 10px; } 100% { top: calc(100% - 10px); } }
+    .scanner-line { position: absolute; left: 10px; right: 10px; height: 2px; background: linear-gradient(90deg, transparent, var(--gold2), transparent); animation: scanLine 2s ease-in-out infinite alternate; box-shadow: 0 0 8px rgba(201,151,42,0.8); }
+    .scanner-hint { text-align: center; margin-top: 20px; font-size: 13px; color: rgba(245,240,232,0.5); letter-spacing: 0.04em; }
+    .scanner-footer { padding: 20px; }
+    .scanner-cancel-btn { width: 100%; border-radius: var(--radius-sm); background: rgba(245,240,232,0.1); border: 1px solid rgba(245,240,232,0.2); padding: 14px; font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; color: var(--cream); cursor: pointer; transition: background 0.2s; }
+    .scanner-cancel-btn:hover { background: rgba(245,240,232,0.15); }
+    .scanner-error { margin: 12px 20px 0; border-radius: 8px; background: var(--red-light); padding: 10px 14px; font-size: 13px; color: var(--red); text-align: center; }
+
+    /* TOAST */
+    .toast-container { position: fixed; top: 74px; right: 12px; z-index: 200; display: flex; flex-direction: column; gap: 8px; max-width: 320px; }
+    @keyframes toastIn { from { opacity:0; transform: translateX(40px) scale(0.9); } to { opacity:1; transform: translateX(0) scale(1); } }
+    .toast { padding: 12px 16px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 600; color: white; box-shadow: var(--shadow-lg); animation: toastIn 0.3s cubic-bezier(0.34,1.3,0.64,1); display: flex; align-items: center; gap: 8px; }
+    .toast-success { background: var(--green2); }
+    .toast-error { background: var(--red); }
+    .toast-info { background: var(--green); border: 1px solid rgba(201,151,42,0.3); }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(26,58,42,0.2); border-radius: 3px; }
   </style>
 </head>
 <body>
-  <!-- WELCOME SCREEN -->
-  <div id="welcome-screen">
-    <!-- background blobs -->
-    <div class="ws-bg-blob" style="width:420px;height:420px;background:rgba(249,168,37,0.13);top:-80px;right:-100px;"></div>
-    <div class="ws-bg-blob" style="width:300px;height:300px;background:rgba(245,124,0,0.09);bottom:-60px;left:-80px;"></div>
-    <div class="ws-bg-blob" style="width:180px;height:180px;background:rgba(249,210,100,0.18);bottom:80px;right:40px;"></div>
-
-    <div class="ws-content">
-      <!-- Icon ring -->
-      <div class="ws-ring-wrap">
-        <div class="ws-ring"></div>
-        <div class="ws-ring-pulse"></div>
-        <div class="ws-ring-inner">
-          <span class="ws-emoji">🛒</span>
-        </div>
-      </div>
-
-      <p class="ws-tagline">Smart Shopping Experience</p>
-
-      <h1 class="ws-title">Welcome<br><span>Shopper!</span></h1>
-
-      <p class="ws-subtitle">Scan smarter. Shop faster.<br>Pay with a smile.</p>
-
-      <div class="ws-greeting-row">
-        <div class="ws-greeting-chip">
-          <div class="ws-dot"></div>
-          Have a wonderful shopping day ✨
-        </div>
-      </div>
-
-      <button class="ws-btn" id="ws-enter-btn" onclick="enterApp()">
-        Start Shopping &nbsp;→
-      </button>
-    </div>
-
-    <p class="ws-footer">SMART TROLLEY &nbsp;·&nbsp; Powered by ESP32 &amp; AI</p>
-  </div>
-
-  <div id="root" style="display:none;"></div>
-
-  <script>
-    function enterApp() {
-      const ws = document.getElementById('welcome-screen');
-      const root = document.getElementById('root');
-      ws.classList.add('fade-out');
-      setTimeout(() => {
-        ws.style.display = 'none';
-        root.style.display = '';
-      }, 520);
-    }
-  </script>
-
+  <div id="root"></div>
   <script type="text/babel">
     const { useState, useCallback, useRef, useEffect } = React;
 
-    // ==================== PRODUCTS ====================
     const PRODUCTS = [
-      { name: "Biscuit Pack", barcode: "BISCUIT_PACK", weight: 200, price: 30 },
-      { name: "Milk Pack", barcode: "MILK_PACK", weight: 500, price: 25 },
-      { name: "Soap", barcode: "soap", weight: 100, price: 20 },
+      { name: "Biscuit Pack", barcode: "BISCUIT_PACK", weight: 200, price: 30, emoji: "🍪" },
+      { name: "Milk Pack",    barcode: "MILK_PACK",    weight: 500, price: 25, emoji: "🥛" },
+      { name: "Soap",         barcode: "soap",         weight: 100, price: 20, emoji: "🧼" },
     ];
+    function findProductByBarcode(b) { return PRODUCTS.find(p => p.barcode === b) || null; }
 
-    function findProductByBarcode(barcode) {
-      return PRODUCTS.find((p) => p.barcode === barcode) || null;
-    }
-
-    // ==================== TOAST SYSTEM ====================
-    let toastId = 0;
-    let setToastsGlobal = null;
-
-    function toast(message, type = "info") {
+    let toastId = 0, setToastsGlobal = null;
+    function toast(msg, type="info") {
       const id = ++toastId;
       if (setToastsGlobal) {
-        setToastsGlobal((prev) => [...prev, { id, message, type }]);
-        setTimeout(() => {
-          if (setToastsGlobal) setToastsGlobal((prev) => prev.filter((t) => t.id !== id));
-        }, 3000);
+        setToastsGlobal(p => [...p, { id, msg, type }]);
+        setTimeout(() => setToastsGlobal(p => p.filter(t => t.id !== id)), 3000);
       }
     }
-    toast.success = (msg) => toast(msg, "success");
-    toast.error = (msg) => toast(msg, "error");
-    toast.info = (msg) => toast(msg, "info");
+    toast.success = m => toast(m, "success");
+    toast.error   = m => toast(m, "error");
+    toast.info    = m => toast(m, "info");
 
     function ToastContainer() {
       const [toasts, setToasts] = useState([]);
       useEffect(() => { setToastsGlobal = setToasts; return () => { setToastsGlobal = null; }; }, []);
       return (
         <div className="toast-container">
-          {toasts.map((t) => (
-            <div key={t.id} className={`toast toast-${t.type}`}>{t.message}</div>
+          {toasts.map(t => (
+            <div key={t.id} className={`toast toast-${t.type}`}>
+              {t.type==="success"?"✅":t.type==="error"?"❌":"ℹ️"} {t.msg}
+            </div>
           ))}
         </div>
       );
     }
 
-    // ==================== SVG ICONS ====================
-    const ScanLineIcon = () => (
-      <svg className="icon icon-lg" style={{marginRight: 8, display: 'inline-block', verticalAlign: 'middle'}} viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" x2="17" y1="12" y2="12"/></svg>
-    );
-    const ZapIcon = () => (
-      <svg className="icon" style={{marginRight: 4, display: 'inline-block', verticalAlign: 'middle'}} viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-    );
-    const PauseIcon = () => (
-      <svg className="icon" style={{marginRight: 4, display: 'inline-block', verticalAlign: 'middle'}} viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="10" x2="10" y1="15" y2="9"/><line x1="14" x2="14" y1="15" y2="9"/></svg>
-    );
-    const MinusIcon = () => (<svg className="icon" viewBox="0 0 24 24"><line x1="5" x2="19" y1="12" y2="12"/></svg>);
-    const PlusIcon = () => (<svg className="icon" viewBox="0 0 24 24"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>);
-    const Trash2Icon = () => (<svg className="icon" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>);
-    const XIcon = () => (<svg className="icon icon-lg" viewBox="0 0 24 24"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>);
+    const CONFETTI_COLORS = ["#c9972a","#e8b84b","#1a3a2a","#2d5a3d","#f5f0e8","#3d7a52","#b8860b"];
+    function Confetti({ show }) {
+      const pieces = useRef(Array.from({ length: 80 }, (_, i) => ({
+        id: i, color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+        left: Math.random() * 100, delay: Math.random() * 1.5,
+        duration: 2.5 + Math.random() * 2,
+        shape: ["circle","rect","square"][i % 3],
+      }))).current;
+      if (!show) return null;
+      return (
+        <div className="confetti-container">
+          {pieces.map(p => (
+            <div key={p.id} className="confetti-piece" style={{
+              left: `${p.left}%`, background: p.color,
+              animationDuration: `${p.duration}s`, animationDelay: `${p.delay}s`,
+              borderRadius: p.shape === "circle" ? "50%" : p.shape === "rect" ? "2px" : "0",
+              width: p.shape === "rect" ? "8px" : "10px", height: p.shape === "rect" ? "16px" : "10px",
+            }} />
+          ))}
+        </div>
+      );
+    }
 
-    // ==================== useTrolley HOOK ====================
+    function QRCanvas({ data, size = 140 }) {
+      const canvasRef = useRef(null);
+      useEffect(() => {
+        if (!canvasRef.current) return;
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, size, size);
+        ctx.fillStyle = "#fff";
+        ctx.fillRect(0, 0, size, size);
+        const hash = Array.from(data).reduce((acc, c) => (acc * 31 + c.charCodeAt(0)) & 0xFFFFFFFF, 0);
+        const GRID = 21, cell = Math.floor(size / GRID), offset = Math.floor((size - cell * GRID) / 2);
+        ctx.fillStyle = "#1a3a2a";
+        for (let r = 0; r < GRID; r++) {
+          for (let c = 0; c < GRID; c++) {
+            const inFinder = (r < 7 && c < 7) || (r < 7 && c >= GRID-7) || (r >= GRID-7 && c < 7);
+            let dark = false;
+            if (inFinder) {
+              const fr = r < 7 ? r : r-(GRID-7), fc = c < 7 ? c : c-(GRID-7);
+              dark = (fr===0||fr===6||fc===0||fc===6)||(fr>=2&&fr<=4&&fc>=2&&fc<=4);
+            } else {
+              dark = ((hash >> ((r * GRID + c) % 32)) & 1) === 1;
+            }
+            if (dark) ctx.fillRect(offset+c*cell+1, offset+r*cell+1, cell-2, cell-2);
+          }
+        }
+      }, [data, size]);
+      return <canvas ref={canvasRef} width={size} height={size} style={{display:"block"}} />;
+    }
+
+    function WelcomeScreen({ onEnter }) {
+      const [exiting, setExiting] = useState(false);
+      const [timeStr, setTimeStr] = useState(""), [greeting, setGreeting] = useState("");
+      useEffect(() => {
+        const update = () => {
+          const now = new Date(), h = now.getHours();
+          setGreeting(h < 12 ? "Good Morning" : h < 17 ? "Good Afternoon" : "Good Evening");
+          setTimeStr(now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
+        };
+        update();
+        const t = setInterval(update, 10000);
+        return () => clearInterval(t);
+      }, []);
+      const handleEnter = () => { setExiting(true); setTimeout(onEnter, 650); };
+      return (
+        <div className={`welcome-screen${exiting?" exit":""}`}>
+          <div className="welcome-bg-pattern" />
+          <div className="welcome-glow" />
+          {[{top:"10%",left:"8%",d:"0s",e:"🌿"},{top:"15%",right:"10%",d:"0.8s",e:"🍃"},{top:"70%",left:"5%",d:"1.2s",e:"✨"},{top:"75%",right:"8%",d:"0.4s",e:"🌱"}].map((l,i)=>(
+            <div key={i} className="welcome-leaf" style={{top:l.top,left:l.left,right:l.right,animationDelay:l.d}}>{l.e}</div>
+          ))}
+          <div className="welcome-content">
+            <span className="welcome-icon">🛒</span>
+            <h1 className="welcome-title">Smart<br /><span className="welcome-gold">Shopping</span></h1>
+            <p className="welcome-subtitle">INTELLIGENT TROLLEY SYSTEM</p>
+            <div className="welcome-divider" />
+            <p className="welcome-greeting">"{greeting}, Happy Shopper!"</p>
+            <p className="welcome-tagline" style={{marginTop:8}}>Scan · Track · Save</p>
+            <button className="welcome-btn" onClick={handleEnter}><span>Start Shopping</span><span>→</span></button>
+            {timeStr && <p className="welcome-time">🕐 {timeStr}</p>}
+          </div>
+        </div>
+      );
+    }
+
     const ESP32_BASE = "http://192.168.4.1";
     const WEIGHT_THRESHOLD = 50;
 
@@ -394,8 +501,7 @@
       const [esp32Connected, setEsp32Connected] = useState(false);
       const [esp32Connecting, setEsp32Connecting] = useState(false);
       const [stationaryAlert, setStationaryAlert] = useState(false);
-      const stationaryTimer = useRef(null);
-      const pollingRef = useRef(null);
+      const stationaryTimer = useRef(null), pollingRef = useRef(null);
 
       const totalExpectedWeight = cartItems.reduce((s, i) => s + i.product.weight * i.quantity, 0);
       const totalPrice = cartItems.reduce((s, i) => s + i.product.price * i.quantity, 0);
@@ -404,312 +510,228 @@
 
       const sendExpectedWeight = useCallback(async (weight) => {
         if (isDemo) return;
-        try {
-          const c = new AbortController();
-          const t = setTimeout(() => c.abort(), 3000);
-          await fetch(`${ESP32_BASE}/updateWeight?weight=${weight}`, { signal: c.signal, mode: "no-cors" });
-          clearTimeout(t);
-        } catch {}
+        try { const c = new AbortController(); const t = setTimeout(()=>c.abort(),3000); await fetch(`${ESP32_BASE}/updateWeight?weight=${weight}`,{signal:c.signal,mode:"no-cors"}); clearTimeout(t); } catch {}
       }, [isDemo]);
 
       const fetchSensorData = useCallback(async () => {
-        try {
-          const c = new AbortController();
-          const t = setTimeout(() => c.abort(), 3000);
-          const res = await fetch(`${ESP32_BASE}/getData`, { signal: c.signal });
-          clearTimeout(t);
-          if (!res.ok) return null;
-          return await res.json();
-        } catch { return null; }
+        try { const c = new AbortController(); const t = setTimeout(()=>c.abort(),3000); const res = await fetch(`${ESP32_BASE}/getData`,{signal:c.signal}); clearTimeout(t); if (!res.ok) return null; return await res.json(); } catch { return null; }
       }, []);
 
       useEffect(() => {
-        if (isDemo) {
-          if (pollingRef.current) clearInterval(pollingRef.current);
-          setEsp32Connected(false); setEsp32Connecting(false);
-          return;
-        }
+        if (isDemo) { if (pollingRef.current) clearInterval(pollingRef.current); setEsp32Connected(false); setEsp32Connecting(false); return; }
         setEsp32Connecting(true); setEsp32Connected(false);
-        const lastData = { actual: 0, expected: 0, moving: true };
+        const lastData = { actual:0, expected:0, moving:true };
         const poll = async () => {
           const data = await fetchSensorData();
           if (data) {
-            // Only update state if values actually changed — prevents unnecessary re-renders
-            const changed = data.actual !== lastData.actual || data.expected !== lastData.expected || data.moving !== lastData.moving;
-            if (changed) {
-              lastData.actual = data.actual;
-              lastData.expected = data.expected;
-              lastData.moving = data.moving;
-              setSensorData(data);
-            }
+            const changed = data.actual!==lastData.actual||data.expected!==lastData.expected||data.moving!==lastData.moving;
+            if (changed) { lastData.actual=data.actual; lastData.expected=data.expected; lastData.moving=data.moving; setSensorData(data); }
             setEsp32Connected(true); setEsp32Connecting(false);
-            if (!data.moving) {
-              if (!stationaryTimer.current) stationaryTimer.current = setTimeout(() => setStationaryAlert(true), 60000);
-            } else {
-              if (stationaryTimer.current) { clearTimeout(stationaryTimer.current); stationaryTimer.current = null; }
-              setStationaryAlert(false);
-            }
+            if (!data.moving) { if (!stationaryTimer.current) stationaryTimer.current = setTimeout(()=>setStationaryAlert(true), 60000); }
+            else { if (stationaryTimer.current) { clearTimeout(stationaryTimer.current); stationaryTimer.current=null; } setStationaryAlert(false); }
           } else { setEsp32Connected(false); setEsp32Connecting(true); }
         };
-        poll();
-        pollingRef.current = setInterval(poll, 2000);
+        poll(); pollingRef.current = setInterval(poll, 2000);
         return () => { if (pollingRef.current) clearInterval(pollingRef.current); if (stationaryTimer.current) clearTimeout(stationaryTimer.current); };
       }, [isDemo, fetchSensorData]);
 
-      useEffect(() => { if (isDemo) setSensorData((p) => ({ ...p, expected: totalExpectedWeight })); }, [isDemo, totalExpectedWeight]);
+      useEffect(() => { if (isDemo) setSensorData(p => ({ ...p, expected: totalExpectedWeight })); }, [isDemo, totalExpectedWeight]);
 
       const addItemByBarcode = useCallback((barcode) => {
         const product = findProductByBarcode(barcode);
-        if (!product) return { success: false, error: "Product not found" };
-        setCartItems((prev) => {
-          const existing = prev.find((i) => i.product.barcode === barcode);
-          if (existing) return prev.map((i) => i.product.barcode === barcode ? { ...i, quantity: i.quantity + 1 } : i);
+        if (!product) return { success: false };
+        setCartItems(prev => {
+          const ex = prev.find(i => i.product.barcode === barcode);
+          if (ex) return prev.map(i => i.product.barcode===barcode ? {...i, quantity:i.quantity+1} : i);
           return [...prev, { product, quantity: 1 }];
         });
-        if (isDemo) setSensorData((p) => ({ ...p, actual: p.actual + product.weight, expected: totalExpectedWeight + product.weight }));
+        if (isDemo) setSensorData(p => ({ ...p, actual: p.actual+product.weight, expected: totalExpectedWeight+product.weight }));
         return { success: true, product };
       }, [isDemo, totalExpectedWeight]);
 
       useEffect(() => { sendExpectedWeight(totalExpectedWeight); }, [totalExpectedWeight, sendExpectedWeight]);
 
       const updateQuantity = useCallback((barcode, delta) => {
-        setCartItems((prev) => {
-          const item = prev.find((i) => i.product.barcode === barcode);
+        setCartItems(prev => {
+          const item = prev.find(i => i.product.barcode === barcode);
           if (!item) return prev;
           const newQty = item.quantity + delta;
-          if (newQty <= 0) {
-            if (isDemo) setSensorData((s) => ({ ...s, actual: Math.max(0, s.actual - item.product.weight * item.quantity) }));
-            return prev.filter((i) => i.product.barcode !== barcode);
-          }
-          if (isDemo) setSensorData((s) => ({ ...s, actual: Math.max(0, s.actual + item.product.weight * delta) }));
-          return prev.map((i) => (i.product.barcode === barcode ? { ...i, quantity: newQty } : i));
+          if (newQty <= 0) { if (isDemo) setSensorData(s => ({...s, actual: Math.max(0, s.actual-item.product.weight*item.quantity)})); return prev.filter(i => i.product.barcode!==barcode); }
+          if (isDemo) setSensorData(s => ({...s, actual: Math.max(0, s.actual+item.product.weight*delta)}));
+          return prev.map(i => i.product.barcode===barcode ? {...i, quantity:newQty} : i);
         });
       }, [isDemo]);
 
       const removeItem = useCallback((barcode) => {
-        setCartItems((prev) => {
-          const item = prev.find((i) => i.product.barcode === barcode);
-          if (item && isDemo) setSensorData((s) => ({ ...s, actual: Math.max(0, s.actual - item.product.weight * item.quantity) }));
-          return prev.filter((i) => i.product.barcode !== barcode);
-        });
+        setCartItems(prev => { const item = prev.find(i => i.product.barcode===barcode); if (item && isDemo) setSensorData(s => ({...s, actual: Math.max(0, s.actual-item.product.weight*item.quantity)})); return prev.filter(i => i.product.barcode!==barcode); });
       }, [isDemo]);
 
-      const simulateUnscannedItem = useCallback(() => { if (isDemo) setSensorData((p) => ({ ...p, actual: p.actual + 150 })); }, [isDemo]);
+      const simulateUnscannedItem = useCallback(() => { if (isDemo) setSensorData(p => ({...p, actual: p.actual+150})); }, [isDemo]);
       const simulateStationary = useCallback(() => {
         if (!isDemo) return;
-        setStationaryAlert(true); setSensorData((p) => ({ ...p, moving: false }));
-        setTimeout(() => { setStationaryAlert(false); setSensorData((p) => ({ ...p, moving: true })); }, 5000);
+        setStationaryAlert(true); setSensorData(p => ({...p, moving:false}));
+        setTimeout(() => { setStationaryAlert(false); setSensorData(p => ({...p, moving:true})); }, 5000);
       }, [isDemo]);
 
       const toggleMode = useCallback(() => {
-        setIsDemo((prev) => {
-          if (prev) { setSensorData({ actual: 0, expected: totalExpectedWeight, moving: true }); }
-          else { setSensorData({ actual: totalExpectedWeight, expected: totalExpectedWeight, moving: true }); }
-          setStationaryAlert(false);
-          return !prev;
+        setIsDemo(prev => {
+          if (prev) setSensorData({ actual:0, expected:totalExpectedWeight, moving:true });
+          else setSensorData({ actual:totalExpectedWeight, expected:totalExpectedWeight, moving:true });
+          setStationaryAlert(false); return !prev;
         });
       }, [totalExpectedWeight]);
 
       return { isDemo, toggleMode, cartItems, sensorData, esp32Connected, esp32Connecting, weightMismatch, stationaryAlert, totalExpectedWeight, totalPrice, totalItems, addItemByBarcode, updateQuantity, removeItem, simulateUnscannedItem, simulateStationary };
     }
 
-    // ==================== COMPONENTS ====================
-
-    function ModeToggle({ isDemo, onToggle, esp32Connected, esp32Connecting }) {
-      return (
-        <div className="border" style={{ borderRadius: 'var(--radius)', background: 'var(--card)', padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <span style={{ fontSize: 14, fontWeight: 600, color: isDemo ? 'var(--warning)' : 'var(--muted-foreground)' }}>DEMO</span>
-              <span className={`switch ${!isDemo ? 'active' : ''}`} onClick={onToggle}></span>
-              <span style={{ fontSize: 14, fontWeight: 600, color: !isDemo ? 'var(--success)' : 'var(--muted-foreground)' }}>LIVE</span>
-            </div>
-            {isDemo ? (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 9999, background: 'hsla(38,92%,50%,0.15)', padding: '4px 12px', fontSize: 12, fontWeight: 500, color: 'var(--warning)' }}>⚡ DEMO MODE</span>
-            ) : esp32Connected ? (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 9999, background: 'hsla(142,71%,45%,0.15)', padding: '4px 12px', fontSize: 12, fontWeight: 500, color: 'var(--success)' }}>✅ ESP32 Connected</span>
-            ) : esp32Connecting ? (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 9999, background: 'var(--muted)', padding: '4px 12px', fontSize: 12, fontWeight: 500, color: 'var(--muted-foreground)' }}>Waiting for ESP32…</span>
-            ) : (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 9999, background: 'hsla(0,84%,60%,0.15)', padding: '4px 12px', fontSize: 12, fontWeight: 500, color: 'var(--destructive)' }}>⚠️ Disconnected</span>
-            )}
-          </div>
-          {isDemo && <p style={{ marginTop: 8, fontSize: 12, color: 'var(--muted-foreground)' }}>DEMO MODE — ESP32 Not Connected. All sensor data is simulated.</p>}
-        </div>
-      );
-    }
-
-    function AlertBanners({ weightMismatch, stationaryAlert }) {
+    function BudgetPill({ spent }) {
+      const [budget, setBudget] = useState(0);
+      const [showModal, setShowModal] = useState(false);
+      const [inputVal, setInputVal] = useState("");
+      const remaining = budget > 0 ? budget - spent : null;
+      const pct = budget > 0 ? Math.min((spent / budget) * 100, 100) : 0;
+      const isWarn = budget > 0 && remaining !== null && remaining < budget * 0.2 && remaining >= 0;
+      const isOver = remaining !== null && remaining < 0;
+      const handleSet = () => { const v = parseFloat(inputVal); if (!isNaN(v) && v > 0) { setBudget(v); setShowModal(false); } };
       return (
         <>
-          {weightMismatch && (
-            <div className="flash-alert slide-in" style={{ borderRadius: 'var(--radius)', background: 'var(--destructive)', padding: '12px 16px', textAlign: 'center', fontSize: 14, fontWeight: 700, color: 'var(--destructive-foreground)', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
-              ⚠️ WEIGHT MISMATCH DETECTED — Unscanned item may be in trolley!
+          <div className="budget-pill" onClick={() => setShowModal(true)}>
+            <div className="budget-pill-top">
+              <span className="budget-pill-label">💰 Budget</span>
+              <span className="budget-pill-edit">{budget > 0 ? "Edit" : "Set"}</span>
             </div>
-          )}
-          {stationaryAlert && (
-            <div className="slide-in" style={{ borderRadius: 'var(--radius)', background: 'var(--warning)', padding: '12px 16px', textAlign: 'center', fontSize: 14, fontWeight: 700, color: 'var(--warning-foreground)', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
-              🛑 Trolley has been stationary — Please move it to avoid blocking the aisle
+            {budget > 0 ? (
+              <>
+                <div className={`budget-pill-remaining${isOver?" over":isWarn?" warn":""}`}>
+                  {isOver?"-":""}₹{Math.abs(remaining).toFixed(0)} {isOver?"over":"left"}
+                </div>
+                <div className="budget-bar-bg">
+                  <div className={`budget-bar-fill ${isOver?"budget-bar-over":isWarn?"budget-bar-warn":"budget-bar-ok"}`} style={{width:`${pct}%`}} />
+                </div>
+                <div className="budget-sub">₹{spent} of ₹{budget} spent</div>
+              </>
+            ) : (
+              <div style={{fontSize:12, color:"rgba(245,240,232,0.5)", marginTop:4}}>Tap to set budget</div>
+            )}
+          </div>
+          {showModal && (
+            <div className="budget-modal-overlay" onClick={() => setShowModal(false)}>
+              <div className="budget-modal" onClick={e => e.stopPropagation()}>
+                <h3>Set Your Budget</h3>
+                <p>We'll track your spending and alert you as you get close.</p>
+                <div className="budget-input-wrap">
+                  <span className="budget-input-prefix">₹</span>
+                  <input className="budget-input" type="number" placeholder="0" value={inputVal} onChange={e => setInputVal(e.target.value)} onKeyDown={e => e.key==="Enter" && handleSet()} autoFocus />
+                </div>
+                <button className="budget-modal-btn" onClick={handleSet}>Set Budget</button>
+              </div>
             </div>
           )}
         </>
       );
     }
 
-    function SensorTile({ label, value, alert }) {
+    function CheckoutModal({ open, onClose, items, totalExpectedWeight, totalPrice, totalItems }) {
+      const [showConfetti, setShowConfetti] = useState(false);
+      useEffect(() => {
+        if (open) { setShowConfetti(true); const t = setTimeout(() => setShowConfetti(false), 3500); return () => clearTimeout(t); }
+      }, [open]);
+      if (!open) return null;
+      const qrData = JSON.stringify({ items: items.map(i=>({n:i.product.name,q:i.quantity,p:i.product.price*i.quantity})), total: totalPrice, wt: totalExpectedWeight, ts: Date.now() });
       return (
-        <div style={{ borderRadius: 8, padding: 12, textAlign: 'center', background: alert ? 'hsla(0,84%,60%,0.1)' : 'hsla(214,20%,94%,0.6)' }}>
-          <p style={{ fontSize: 12, color: 'var(--muted-foreground)' }}>{label}</p>
-          <p style={{ fontSize: 18, fontWeight: 700, color: alert ? 'var(--destructive)' : 'var(--foreground)' }}>{value}</p>
-        </div>
-      );
-    }
-
-    function SensorPanel({ actual, expected, moving, weightMismatch }) {
-      const diff = Math.abs(actual - expected);
-      return (
-        <div className="border" style={{ borderRadius: 'var(--radius)', background: 'var(--card)', padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-          <h2 style={{ marginBottom: 12, fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--muted-foreground)' }}>📡 Live Sensor Data</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <SensorTile label="Actual Weight" value={`${actual.toFixed(0)}g`} />
-            <SensorTile label="Expected Weight" value={`${expected.toFixed(0)}g`} />
-            <SensorTile label="Weight Diff" value={`${diff.toFixed(0)}g`} alert={weightMismatch} />
-            <SensorTile label="Trolley Status" value={moving ? "Moving 🟢" : "Stationary 🔴"} />
-          </div>
-          <div style={{ marginTop: 12, borderRadius: 8, padding: '8px 12px', textAlign: 'center', fontSize: 14, fontWeight: 600, background: weightMismatch ? 'hsla(0,84%,60%,0.15)' : 'hsla(142,71%,45%,0.15)', color: weightMismatch ? 'var(--destructive)' : 'var(--success)' }}>
-            {weightMismatch ? "⚠️ MISMATCH DETECTED" : "✅ System OK"}
-          </div>
-        </div>
-      );
-    }
-
-    function Cart({ items, totalExpectedWeight, totalPrice, totalItems, onRequestScanForRemoval, onCheckout }) {
-      return (
-        <div className="border" style={{ borderRadius: 'var(--radius)', background: 'var(--card)', padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-          <h2 style={{ marginBottom: 12, fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--muted-foreground)' }}>🛒 Shopping Cart</h2>
-          {items.length === 0 ? (
-            <p style={{ padding: '32px 0', textAlign: 'center', fontSize: 14, color: 'var(--muted-foreground)' }}>Cart is empty. Scan an item to get started!</p>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {items.map((item) => (
-                <div key={item.product.barcode} className="cart-item-enter" style={{ display: 'flex', alignItems: 'center', gap: 12, borderRadius: 8, background: 'hsla(214,20%,94%,0.4)', padding: 12 }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontWeight: 600, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.product.name}</p>
-                    <p style={{ fontSize: 12, color: 'var(--muted-foreground)' }}>{item.product.weight}g × {item.quantity} = {item.product.weight * item.quantity}g</p>
-                    <p style={{ fontSize: 12, color: 'var(--muted-foreground)' }}>₹{item.product.price} × {item.quantity} = ₹{item.product.price * item.quantity}</p>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <button onClick={() => onRequestScanForRemoval(item.product.barcode, "decrease")} style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, background: 'var(--secondary)', color: 'var(--secondary-foreground)', cursor: 'pointer', border: 'none' }}><MinusIcon /></button>
-                    <span style={{ width: 24, textAlign: 'center', fontSize: 14, fontWeight: 700 }}>{item.quantity}</span>
-                    <button onClick={() => onRequestScanForRemoval(item.product.barcode, "increase")} style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, background: 'var(--primary)', color: 'var(--primary-foreground)', cursor: 'pointer', border: 'none' }}><PlusIcon /></button>
-                    <button onClick={() => onRequestScanForRemoval(item.product.barcode, "remove")} style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, background: 'hsla(0,84%,60%,0.15)', color: 'var(--destructive)', cursor: 'pointer', border: 'none', marginLeft: 4 }}><Trash2Icon /></button>
+        <>
+          <Confetti show={showConfetti} />
+          <div className="modal-overlay" onClick={onClose}>
+            <div className="modal-box" onClick={e => e.stopPropagation()}>
+              <div className="modal-header">
+                <h2>🧾 Your Bill</h2>
+                <p>Thank you for shopping with us!</p>
+                <button className="modal-close" onClick={onClose}>✕</button>
+              </div>
+              <div className="modal-body">
+                <table className="bill-table">
+                  <thead><tr><th>Item</th><th style={{textAlign:"center"}}>Qty</th><th style={{textAlign:"right"}}>Wt.</th><th>Price</th></tr></thead>
+                  <tbody>
+                    {items.map(item => (
+                      <tr key={item.product.barcode}>
+                        <td>{item.product.emoji} {item.product.name}</td>
+                        <td style={{textAlign:"center"}}>{item.quantity}</td>
+                        <td style={{textAlign:"right", color:"var(--text3)"}}>{item.product.weight*item.quantity}g</td>
+                        <td>₹{item.product.price*item.quantity}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <div className="bill-total-section">
+                  <div className="bill-row"><span>Total Items</span><span>{totalItems}</span></div>
+                  <div className="bill-row"><span>Total Weight</span><span>{totalExpectedWeight}g</span></div>
+                  <div className="bill-grand"><span>Grand Total</span><span>₹{totalPrice}</span></div>
+                </div>
+                <div className="qr-section">
+                  <h4>🚪 Exit Gate Verification</h4>
+                  <p>Show this QR to the security guard at the exit</p>
+                  <div className="qr-canvas-wrap"><QRCanvas data={qrData} size={140} /></div>
+                  <div className="qr-label">Scan at exit · Valid for this session only</div>
+                  <div className="qr-verify-badge">
+                    <span style={{width:8,height:8,borderRadius:"50%",background:"var(--green2)",display:"inline-block"}}></span>
+                    Verified Purchase — ₹{totalPrice}
                   </div>
                 </div>
-              ))}
+                <button className="done-btn" onClick={onClose}>Done — Happy Shopping! 🛒</button>
+              </div>
             </div>
-          )}
-          <div style={{ marginTop: 16, borderTop: '1px solid var(--border)', paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}><span style={{ color: 'var(--muted-foreground)' }}>Items</span><span style={{ fontWeight: 600 }}>{totalItems}</span></div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}><span style={{ color: 'var(--muted-foreground)' }}>Expected Weight</span><span style={{ fontWeight: 600 }}>{totalExpectedWeight}g</span></div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16 }}><span style={{ fontWeight: 700 }}>Total</span><span style={{ fontWeight: 700, color: 'var(--primary)' }}>₹{totalPrice}</span></div>
           </div>
-          {items.length > 0 && (
-            <button onClick={onCheckout} style={{ marginTop: 16, width: '100%', borderRadius: 'var(--radius)', background: 'var(--primary)', padding: '12px 0', fontSize: 14, fontWeight: 700, color: 'var(--primary-foreground)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', cursor: 'pointer', border: 'none', fontFamily: 'inherit' }}>Checkout →</button>
-          )}
-        </div>
-      );
-    }
-
-    function CheckoutModal({ open, onClose, items, totalExpectedWeight, totalPrice, totalItems }) {
-      if (!open) return null;
-      return (
-        <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'hsla(215,25%,15%,0.4)', padding: 16 }}>
-          <div className="slide-in" onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: 448, borderRadius: 16, background: 'var(--card)', padding: 24, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-              <h2 style={{ fontSize: 18, fontWeight: 700 }}>🧾 Bill Summary</h2>
-              <button onClick={onClose} style={{ borderRadius: 8, padding: 4, cursor: 'pointer', background: 'transparent', border: 'none', color: 'var(--foreground)' }}><XIcon /></button>
-            </div>
-            <div className="border" style={{ borderRadius: 8, overflow: 'hidden' }}>
-              <table style={{ width: '100%', fontSize: 14, borderCollapse: 'collapse' }}>
-                <thead><tr style={{ background: 'var(--muted)', textAlign: 'left' }}><th style={{ padding: '8px 12px', fontWeight: 600 }}>Item</th><th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'center' }}>Qty</th><th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}>Weight</th><th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}>Price</th></tr></thead>
-                <tbody>
-                  {items.map((item) => (
-                    <tr key={item.product.barcode} style={{ borderTop: '1px solid var(--border)' }}><td style={{ padding: '8px 12px' }}>{item.product.name}</td><td style={{ padding: '8px 12px', textAlign: 'center' }}>{item.quantity}</td><td style={{ padding: '8px 12px', textAlign: 'right' }}>{item.product.weight * item.quantity}g</td><td style={{ padding: '8px 12px', textAlign: 'right' }}>₹{item.product.price * item.quantity}</td></tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 4, fontSize: 14 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--muted-foreground)' }}>Total Items</span><span style={{ fontWeight: 600 }}>{totalItems}</span></div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--muted-foreground)' }}>Total Weight</span><span style={{ fontWeight: 600 }}>{totalExpectedWeight}g</span></div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border)', paddingTop: 8, fontSize: 18 }}><span style={{ fontWeight: 700 }}>Grand Total</span><span style={{ fontWeight: 700, color: 'var(--primary)' }}>₹{totalPrice}</span></div>
-            </div>
-            <button onClick={onClose} style={{ marginTop: 24, width: '100%', borderRadius: 'var(--radius)', background: 'var(--primary)', padding: '12px 0', fontSize: 14, fontWeight: 700, color: 'var(--primary-foreground)', cursor: 'pointer', border: 'none', fontFamily: 'inherit' }}>Done</button>
-          </div>
-        </div>
+        </>
       );
     }
 
     const BarcodeScanner = React.memo(function BarcodeScanner({ open, onScan, onClose }) {
-      const videoRef = useRef(null);
-      const streamRef = useRef(null);
+      const videoRef = useRef(null), streamRef = useRef(null), scannedRef = useRef(false);
       const [error, setError] = useState(null);
-      const scannedRef = useRef(false);
-
-      const stopCamera = useCallback(() => {
-        if (streamRef.current) { streamRef.current.getTracks().forEach((t) => t.stop()); streamRef.current = null; }
-      }, []);
-
+      const stopCamera = useCallback(() => { if (streamRef.current) { streamRef.current.getTracks().forEach(t=>t.stop()); streamRef.current=null; } }, []);
       const handleClose = useCallback(() => { stopCamera(); onClose(); }, [stopCamera, onClose]);
-
       useEffect(() => {
         if (!open) return;
         scannedRef.current = false; setError(null);
         let cancelled = false;
-
         const startScanning = async () => {
           try {
             const codeReader = new ZXing.BrowserMultiFormatReader();
-            const constraints = { video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } } };
-            await codeReader.decodeFromConstraints(constraints, videoRef.current, (result, err) => {
+            await codeReader.decodeFromConstraints({ video: { facingMode:"environment", width:{ideal:1280}, height:{ideal:720} } }, videoRef.current, (result) => {
               if (cancelled || scannedRef.current) return;
-              if (result) {
-                scannedRef.current = true;
-                codeReader.reset();
-                stopCamera();
-                onScan(result.getText());
-              }
+              if (result) { scannedRef.current=true; codeReader.reset(); stopCamera(); onScan(result.getText()); }
             });
             streamRef.current = videoRef.current && videoRef.current.srcObject;
-          } catch (e) { if (!cancelled) setError("Camera error: " + e.message); }
+          } catch(e) { if (!cancelled) setError("Camera error: " + e.message); }
         };
         startScanning();
-        return () => { cancelled = true; stopCamera(); };
+        return () => { cancelled=true; stopCamera(); };
       }, [open, onScan, stopCamera]);
-
       if (!open) return null;
       return (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column', background: 'hsla(215,25%,15%,0.95)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 16 }}>
-            <h2 style={{ fontSize: 14, fontWeight: 700, color: 'var(--primary-foreground)' }}>📷 Scan Barcode</h2>
-            <button onClick={handleClose} style={{ borderRadius: 8, background: 'hsla(0,0%,100%,0.2)', padding: 8, color: 'var(--primary-foreground)', cursor: 'pointer', border: 'none' }}><XIcon /></button>
+        <div className="scanner-overlay">
+          <div className="scanner-header">
+            <h2>📷 Scan Product Barcode</h2>
+            <button className="scanner-close" onClick={handleClose}>✕</button>
           </div>
-          <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <video ref={videoRef} autoPlay playsInline muted style={{ height: '100%', width: '100%', objectFit: 'cover' }} />
-            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
-              <div style={{ height: 192, width: 256, borderRadius: 16, border: '4px solid hsla(217,91%,50%,0.7)', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }} />
+          <div className="scanner-video-wrap">
+            <video ref={videoRef} autoPlay playsInline muted className="scanner-video" />
+            <div className="scanner-frame-wrap">
+              <div className="scanner-frame">
+                <div className="scanner-corner-tr" /><div className="scanner-corner-bl" />
+                <div className="scanner-line" />
+              </div>
             </div>
-            {error && <div style={{ position: 'absolute', left: 16, right: 16, top: 16, borderRadius: 8, background: 'var(--destructive)', padding: 12, textAlign: 'center', fontSize: 14, color: 'var(--destructive-foreground)' }}>{error}</div>}
+            {error && <div className="scanner-error">{error}</div>}
           </div>
-          <div style={{ padding: 16 }}>
-            <button onClick={handleClose} style={{ width: '100%', borderRadius: 'var(--radius)', background: 'var(--card)', padding: '12px 0', fontSize: 14, fontWeight: 700, color: 'var(--foreground)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', cursor: 'pointer', border: 'none', fontFamily: 'inherit' }}>Cancel</button>
-          </div>
+          <div className="scanner-hint">Align barcode within the frame</div>
+          <div className="scanner-footer"><button className="scanner-cancel-btn" onClick={handleClose}>Cancel</button></div>
         </div>
       );
-    }); // end BarcodeScanner memo
+    });
 
-    // ==================== MAIN APP ====================
     function App() {
+      const [showWelcome, setShowWelcome] = useState(true);
       const trolley = useTrolley();
       const [scannerOpen, setScannerOpen] = useState(false);
       const [checkoutOpen, setCheckoutOpen] = useState(false);
@@ -718,55 +740,129 @@
       const handleScan = useCallback((barcode) => {
         setScannerOpen(false);
         if (pendingRemoval.current) {
-          const { barcode: expectedBarcode, action } = pendingRemoval.current;
+          const { barcode: eb, action } = pendingRemoval.current;
           pendingRemoval.current = null;
-          if (barcode !== expectedBarcode) { toast.error("❌ Scanned product doesn't match. Please scan the correct item."); return; }
-          if (action === "decrease") { trolley.updateQuantity(barcode, -1); toast.success("✅ Quantity decreased"); }
-          else if (action === "increase") { trolley.updateQuantity(barcode, 1); toast.success("✅ Quantity increased"); }
-          else { trolley.removeItem(barcode); toast.success("✅ Item removed from cart"); }
+          if (barcode !== eb) { toast.error("Scanned product doesn't match."); return; }
+          if (action==="decrease") { trolley.updateQuantity(barcode,-1); toast.success("Quantity decreased"); }
+          else if (action==="increase") { trolley.updateQuantity(barcode,1); toast.success("Quantity increased"); }
+          else { trolley.removeItem(barcode); toast.success("Item removed from cart"); }
           return;
         }
         const result = trolley.addItemByBarcode(barcode);
-        if (result.success && result.product) toast.success(`✅ Item Added: ${result.product.name}`);
-        else toast.error("❌ Product not found in database");
+        if (result.success && result.product) toast.success(`Added: ${result.product.name}`);
+        else toast.error("Product not found in database");
       }, [trolley]);
 
       const handleScannerClose = useCallback(() => { setScannerOpen(false); pendingRemoval.current = null; }, []);
-
       const handleRequestScanForRemoval = useCallback((barcode, action) => {
         pendingRemoval.current = { barcode, action };
         setScannerOpen(true);
-        toast.info(`📷 Scan the product to confirm ${action === "increase" ? "quantity increase" : action === "decrease" ? "quantity decrease" : "removal"}`);
+        toast.info(`Scan to confirm ${action==="increase"?"quantity increase":action==="decrease"?"decrease":"removal"}`);
       }, []);
 
+      if (showWelcome) return <WelcomeScreen onEnter={() => setShowWelcome(false)} />;
+
       return (
-        <div style={{ minHeight: '100vh', background: 'var(--background)' }}>
+        <div style={{minHeight:"100vh"}}>
           <ToastContainer />
-          <header style={{ position: 'sticky', top: 0, zIndex: 30, borderBottom: '1px solid var(--border)', background: 'var(--primary)', padding: '12px 16px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-            <h1 style={{ textAlign: 'center', fontSize: 18, fontWeight: 800, letterSpacing: '-0.01em', color: 'var(--primary-foreground)' }}>🛒 Smart Shopping Trolley</h1>
+          <BudgetPill spent={trolley.totalPrice} />
+
+          <header className="app-header">
+            <div className="header-logo"><span>🛒 Smart <em>Trolley</em></span></div>
+            <div className="header-badge">
+              <div className="header-dot" />
+              {trolley.isDemo?"DEMO":trolley.esp32Connected?"LIVE":"OFFLINE"}
+            </div>
           </header>
-          <main style={{ maxWidth: 512, margin: '0 auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <ModeToggle isDemo={trolley.isDemo} onToggle={trolley.toggleMode} esp32Connected={trolley.esp32Connected} esp32Connecting={trolley.esp32Connecting} />
-            <AlertBanners weightMismatch={trolley.weightMismatch} stationaryAlert={trolley.stationaryAlert} />
-            <button onClick={() => setScannerOpen(true)} style={{ width: '100%', borderRadius: 'var(--radius)', background: 'var(--primary)', padding: '16px 0', fontSize: 16, fontWeight: 700, color: 'var(--primary-foreground)', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', cursor: 'pointer', border: 'none', fontFamily: 'inherit' }}>
-              <ScanLineIcon /> Scan Item
+
+          <main className="app-main">
+            {/* MODE TOGGLE */}
+            <div className="card" style={{animationDelay:"0.05s"}}>
+              <div className="mode-row">
+                <div className="mode-labels">
+                  <span className="mode-text" style={{color:trolley.isDemo?"var(--gold)":"var(--text3)"}}>Demo</span>
+                  <div className={`switch${!trolley.isDemo?" active":""}`} onClick={trolley.toggleMode} />
+                  <span className="mode-text" style={{color:!trolley.isDemo?"var(--green2)":"var(--text3)"}}>Live</span>
+                </div>
+                {trolley.isDemo ? <span className="status-pill status-demo">⚡ Demo Mode</span>
+                  : trolley.esp32Connected ? <span className="status-pill status-live">✅ ESP32 Connected</span>
+                  : trolley.esp32Connecting ? <span className="status-pill status-wait">Waiting for ESP32…</span>
+                  : <span className="status-pill status-warn">⚠️ Disconnected</span>}
+              </div>
+              {trolley.isDemo && <p className="demo-note">ESP32 not connected — all sensor data is simulated.</p>}
+            </div>
+
+            {trolley.weightMismatch && <div className="alert-banner alert-mismatch">⚠️ Weight mismatch — unscanned item may be in trolley!</div>}
+            {trolley.stationaryAlert && <div className="alert-banner alert-stationary">🛑 Trolley stationary too long — please move it</div>}
+
+            <button className="scan-btn" style={{animationDelay:"0.1s"}} onClick={()=>setScannerOpen(true)}>
+              <span style={{fontSize:22}}>📷</span><span>Scan Item</span>
             </button>
+
             {trolley.isDemo && (
-              <div style={{ display: 'flex', gap: 12 }}>
-                <button onClick={trolley.simulateUnscannedItem} style={{ flex: 1, borderRadius: 'var(--radius)', background: 'hsla(0,84%,60%,0.15)', padding: '12px 0', fontSize: 12, fontWeight: 600, color: 'var(--destructive)', cursor: 'pointer', border: 'none', fontFamily: 'inherit' }}><ZapIcon /> Simulate Unscanned Item</button>
-                <button onClick={trolley.simulateStationary} style={{ flex: 1, borderRadius: 'var(--radius)', background: 'hsla(38,92%,50%,0.15)', padding: '12px 0', fontSize: 12, fontWeight: 600, color: 'var(--warning)', cursor: 'pointer', border: 'none', fontFamily: 'inherit' }}><PauseIcon /> Simulate Stationary</button>
+              <div className="demo-row" style={{animationDelay:"0.15s"}}>
+                <button className="demo-btn demo-btn-red" onClick={trolley.simulateUnscannedItem}>⚡ Simulate Unscanned</button>
+                <button className="demo-btn demo-btn-gold" onClick={trolley.simulateStationary}>⏸ Simulate Stationary</button>
               </div>
             )}
-            <SensorPanel actual={trolley.sensorData.actual} expected={trolley.totalExpectedWeight} moving={trolley.sensorData.moving} weightMismatch={trolley.weightMismatch} />
-            <Cart items={trolley.cartItems} totalExpectedWeight={trolley.totalExpectedWeight} totalPrice={trolley.totalPrice} totalItems={trolley.totalItems} onRequestScanForRemoval={handleRequestScanForRemoval} onCheckout={() => setCheckoutOpen(true)} />
+
+            {/* SENSOR */}
+            <div className="card" style={{animationDelay:"0.2s"}}>
+              <div className="card-label">📡 Live Sensor Data</div>
+              <div className="sensor-grid">
+                <div className="sensor-tile"><div className="sensor-tile-label">Actual Weight</div><div className="sensor-tile-val">{trolley.sensorData.actual.toFixed(0)}g</div></div>
+                <div className="sensor-tile"><div className="sensor-tile-label">Expected Weight</div><div className="sensor-tile-val">{trolley.totalExpectedWeight}g</div></div>
+                <div className={`sensor-tile${trolley.weightMismatch?" alert":""}`}><div className="sensor-tile-label">Weight Diff</div><div className="sensor-tile-val">{Math.abs(trolley.sensorData.actual-trolley.totalExpectedWeight).toFixed(0)}g</div></div>
+                <div className="sensor-tile"><div className="sensor-tile-label">Status</div><div className="sensor-tile-val" style={{fontSize:16}}>{trolley.sensorData.moving?"Moving 🟢":"Stopped 🔴"}</div></div>
+              </div>
+              <div className={`sensor-status ${trolley.weightMismatch?"sensor-err":"sensor-ok"}`}>
+                {trolley.weightMismatch?"⚠️ Mismatch Detected":"✅ System OK"}
+              </div>
+            </div>
+
+            {/* CART */}
+            <div className="card" style={{animationDelay:"0.25s"}}>
+              <div className="card-label">🛒 Shopping Cart</div>
+              {trolley.cartItems.length === 0 ? (
+                <div className="cart-empty"><div className="cart-empty-icon">🛒</div><div className="cart-empty-text">Cart is empty — scan an item to get started!</div></div>
+              ) : (
+                <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                  {trolley.cartItems.map(item => (
+                    <div key={item.product.barcode} className="cart-item">
+                      <div className="cart-item-emoji">{item.product.emoji}</div>
+                      <div className="cart-item-info">
+                        <div className="cart-item-name">{item.product.name}</div>
+                        <div className="cart-item-meta">{item.product.weight}g × {item.quantity} = {item.product.weight*item.quantity}g</div>
+                        <div className="cart-item-price">₹{item.product.price*item.quantity}</div>
+                      </div>
+                      <div className="cart-qty-row">
+                        <button className="qty-btn qty-btn-minus" onClick={()=>handleRequestScanForRemoval(item.product.barcode,"decrease")}>−</button>
+                        <span className="qty-num">{item.quantity}</span>
+                        <button className="qty-btn qty-btn-plus" onClick={()=>handleRequestScanForRemoval(item.product.barcode,"increase")}>+</button>
+                        <button className="qty-btn qty-btn-del" onClick={()=>handleRequestScanForRemoval(item.product.barcode,"remove")}>🗑</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {trolley.cartItems.length > 0 && (
+                <div className="cart-summary">
+                  <div className="cart-summary-row"><span>Items</span><span>{trolley.totalItems}</span></div>
+                  <div className="cart-summary-row"><span>Total Weight</span><span>{trolley.totalExpectedWeight}g</span></div>
+                  <div className="cart-total-row"><span>Total</span><span>₹{trolley.totalPrice}</span></div>
+                  <button className="checkout-btn" onClick={()=>setCheckoutOpen(true)}>Checkout &amp; Get Bill →</button>
+                </div>
+              )}
+            </div>
           </main>
+
           <BarcodeScanner open={scannerOpen} onScan={handleScan} onClose={handleScannerClose} />
-          <CheckoutModal open={checkoutOpen} onClose={() => setCheckoutOpen(false)} items={trolley.cartItems} totalExpectedWeight={trolley.totalExpectedWeight} totalPrice={trolley.totalPrice} totalItems={trolley.totalItems} />
+          <CheckoutModal open={checkoutOpen} onClose={()=>setCheckoutOpen(false)} items={trolley.cartItems} totalExpectedWeight={trolley.totalExpectedWeight} totalPrice={trolley.totalPrice} totalItems={trolley.totalItems} />
         </div>
       );
     }
 
-    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
   </script>
 </body>
 </html>
