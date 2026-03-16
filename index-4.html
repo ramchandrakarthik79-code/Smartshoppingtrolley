@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🛒 Smart Shopping Trolley</title>
+  <meta name="description" content="Smart Shopping Trolley with barcode scanning, weight verification, and ESP32 integration" />
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; border: 0 solid #e5e7eb; }
+    :root {
+      --background: hsl(210, 20%, 98%);
+      --foreground: hsl(215, 25%, 15%);
+      --card: hsl(0, 0%, 100%);
+      --card-foreground: hsl(215, 25%, 15%);
+      --primary: hsl(217, 91%, 50%);
+      --primary-foreground: hsl(0, 0%, 100%);
+      --secondary: hsl(214, 32%, 91%);
+      --secondary-foreground: hsl(215, 25%, 15%);
+      --muted: hsl(214, 20%, 94%);
+      --muted-foreground: hsl(215, 15%, 47%);
+      --destructive: hsl(0, 84%, 60%);
+      --destructive-foreground: hsl(0, 0%, 100%);
+      --success: hsl(142, 71%, 45%);
+      --success-foreground: hsl(0, 0%, 100%);
+      --warning: hsl(38, 92%, 50%);
+      --warning-foreground: hsl(0, 0%, 100%);
+      --border: hsl(214, 25%, 88%);
+      --radius: 0.75rem;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--background); color: var(--foreground); }
+    .border { border: 1px solid var(--border); }
+    .border-t { border-top: 1px solid var(--border); }
+
+    /* Flash animation */
+    @keyframes flash { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+    .flash-alert { animation: flash 1s ease-in-out infinite; }
+
+    /* Slide in */
+    @keyframes slideIn { from { transform: translateY(-10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .slide-in { animation: slideIn 0.3s ease-out; }
+
+    /* Cart item enter */
+    @keyframes cartEnter { from { transform: translateX(-20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    .cart-item-enter { animation: cartEnter 0.3s ease-out; }
+
+    /* Toast styles */
+    .toast-container { position: fixed; top: 70px; right: 16px; z-index: 100; display: flex; flex-direction: column; gap: 8px; max-width: 350px; }
+    .toast { padding: 12px 16px; border-radius: 10px; font-size: 14px; font-weight: 600; color: white; box-shadow: 0 4px 12px rgba(0,0,0,0.15); animation: slideIn 0.3s ease-out; }
+    .toast-success { background: var(--success); }
+    .toast-error { background: var(--destructive); }
+    .toast-info { background: var(--primary); }
+
+    /* Switch styles */
+    .switch { width: 44px; height: 24px; border-radius: 12px; background: var(--muted); cursor: pointer; position: relative; transition: background 0.2s; display: inline-block; }
+    .switch.active { background: var(--primary); }
+    .switch::after { content: ''; position: absolute; width: 20px; height: 20px; border-radius: 50%; background: white; top: 2px; left: 2px; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+    .switch.active::after { transform: translateX(20px); }
+
+    /* Button base */
+    .btn { display: inline-flex; align-items: center; justify-content: center; font-weight: 700; border-radius: var(--radius); cursor: pointer; transition: all 0.15s; border: none; font-family: inherit; }
+    .btn:active { transform: scale(0.98); }
+
+    /* SVG icons inline */
+    .icon { width: 16px; height: 16px; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+    .icon-lg { width: 20px; height: 20px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useCallback, useRef, useEffect } = React;
+
+    // ==================== PRODUCTS ====================
+    const PRODUCTS = [
+      { name: "Biscuit Pack", barcode: "BISCUIT_PACK", weight: 200, price: 30 },
+      { name: "Milk Pack", barcode: "MILK_PACK", weight: 500, price: 25 },
+      { name: "Soap", barcode: "soap", weight: 100, price: 20 },
+    ];
+
+    function findProductByBarcode(barcode) {
+      return PRODUCTS.find((p) => p.barcode === barcode) || null;
+    }
+
+    // ==================== TOAST SYSTEM ====================
+    let toastId = 0;
+    let setToastsGlobal = null;
+
+    function toast(message, type = "info") {
+      const id = ++toastId;
+      if (setToastsGlobal) {
+        setToastsGlobal((prev) => [...prev, { id, message, type }]);
+        setTimeout(() => {
+          if (setToastsGlobal) setToastsGlobal((prev) => prev.filter((t) => t.id !== id));
+        }, 3000);
+      }
+    }
+    toast.success = (msg) => toast(msg, "success");
+    toast.error = (msg) => toast(msg, "error");
+    toast.info = (msg) => toast(msg, "info");
+
+    function ToastContainer() {
+      const [toasts, setToasts] = useState([]);
+      useEffect(() => { setToastsGlobal = setToasts; return () => { setToastsGlobal = null; }; }, []);
+      return (
+        <div className="toast-container">
+          {toasts.map((t) => (
+            <div key={t.id} className={`toast toast-${t.type}`}>{t.message}</div>
+          ))}
+        </div>
+      );
+    }
+
+    // ==================== SVG ICONS ====================
+    const ScanLineIcon = () => (
+      <svg className="icon icon-lg" style={{marginRight: 8, display: 'inline-block', verticalAlign: 'middle'}} viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" x2="17" y1="12" y2="12"/></svg>
+    );
+    const ZapIcon = () => (
+      <svg className="icon" style={{marginRight: 4, display: 'inline-block', verticalAlign: 'middle'}} viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+    );
+    const PauseIcon = () => (
+      <svg className="icon" style={{marginRight: 4, display: 'inline-block', verticalAlign: 'middle'}} viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="10" x2="10" y1="15" y2="9"/><line x1="14" x2="14" y1="15" y2="9"/></svg>
+    );
+    const MinusIcon = () => (<svg className="icon" viewBox="0 0 24 24"><line x1="5" x2="19" y1="12" y2="12"/></svg>);
+    const PlusIcon = () => (<svg className="icon" viewBox="0 0 24 24"><line x1="12" x2="12" y1="5" y2="19"/><line x1="5" x2="19" y1="12" y2="12"/></svg>);
+    const Trash2Icon = () => (<svg className="icon" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>);
+    const XIcon = () => (<svg className="icon icon-lg" viewBox="0 0 24 24"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>);
+
+    // ==================== useTrolley HOOK ====================
+    const ESP32_BASE = "http://192.168.4.1";
+    const WEIGHT_THRESHOLD = 50;
+
+    function useTrolley() {
+      const [isDemo, setIsDemo] = useState(true);
+      const [cartItems, setCartItems] = useState([]);
+      const [sensorData, setSensorData] = useState({ actual: 0, expected: 0, moving: true });
+      const [esp32Connected, setEsp32Connected] = useState(false);
+      const [esp32Connecting, setEsp32Connecting] = useState(false);
+      const [stationaryAlert, setStationaryAlert] = useState(false);
+      const stationaryTimer = useRef(null);
+      const pollingRef = useRef(null);
+
+      const totalExpectedWeight = cartItems.reduce((s, i) => s + i.product.weight * i.quantity, 0);
+      const totalPrice = cartItems.reduce((s, i) => s + i.product.price * i.quantity, 0);
+      const totalItems = cartItems.reduce((s, i) => s + i.quantity, 0);
+      const weightMismatch = totalExpectedWeight > 0 && Math.abs(sensorData.actual - totalExpectedWeight) > WEIGHT_THRESHOLD;
+
+      const sendExpectedWeight = useCallback(async (weight) => {
+        if (isDemo) return;
+        try {
+          const c = new AbortController();
+          const t = setTimeout(() => c.abort(), 3000);
+          await fetch(`${ESP32_BASE}/updateWeight?weight=${weight}`, { signal: c.signal, mode: "no-cors" });
+          clearTimeout(t);
+        } catch {}
+      }, [isDemo]);
+
+      const fetchSensorData = useCallback(async () => {
+        try {
+          const c = new AbortController();
+          const t = setTimeout(() => c.abort(), 3000);
+          const res = await fetch(`${ESP32_BASE}/getData`, { signal: c.signal });
+          clearTimeout(t);
+          if (!res.ok) return null;
+          return await res.json();
+        } catch { return null; }
+      }, []);
+
+      useEffect(() => {
+        if (isDemo) {
+          if (pollingRef.current) clearInterval(pollingRef.current);
+          setEsp32Connected(false); setEsp32Connecting(false);
+          return;
+        }
+        setEsp32Connecting(true); setEsp32Connected(false);
+        const lastData = { actual: 0, expected: 0, moving: true };
+        const poll = async () => {
+          const data = await fetchSensorData();
+          if (data) {
+            // Only update state if values actually changed — prevents unnecessary re-renders
+            const changed = data.actual !== lastData.actual || data.expected !== lastData.expected || data.moving !== lastData.moving;
+            if (changed) {
+              lastData.actual = data.actual;
+              lastData.expected = data.expected;
+              lastData.moving = data.moving;
+              setSensorData(data);
+            }
+            setEsp32Connected(true); setEsp32Connecting(false);
+            if (!data.moving) {
+              if (!stationaryTimer.current) stationaryTimer.current = setTimeout(() => setStationaryAlert(true), 60000);
+            } else {
+              if (stationaryTimer.current) { clearTimeout(stationaryTimer.current); stationaryTimer.current = null; }
+              setStationaryAlert(false);
+            }
+          } else { setEsp32Connected(false); setEsp32Connecting(true); }
+        };
+        poll();
+        pollingRef.current = setInterval(poll, 2000);
+        return () => { if (pollingRef.current) clearInterval(pollingRef.current); if (stationaryTimer.current) clearTimeout(stationaryTimer.current); };
+      }, [isDemo, fetchSensorData]);
+
+      useEffect(() => { if (isDemo) setSensorData((p) => ({ ...p, expected: totalExpectedWeight })); }, [isDemo, totalExpectedWeight]);
+
+      const addItemByBarcode = useCallback((barcode) => {
+        const product = findProductByBarcode(barcode);
+        if (!product) return { success: false, error: "Product not found" };
+        setCartItems((prev) => {
+          const existing = prev.find((i) => i.product.barcode === barcode);
+          if (existing) return prev.map((i) => i.product.barcode === barcode ? { ...i, quantity: i.quantity + 1 } : i);
+          return [...prev, { product, quantity: 1 }];
+        });
+        if (isDemo) setSensorData((p) => ({ ...p, actual: p.actual + product.weight, expected: totalExpectedWeight + product.weight }));
+        return { success: true, product };
+      }, [isDemo, totalExpectedWeight]);
+
+      useEffect(() => { sendExpectedWeight(totalExpectedWeight); }, [totalExpectedWeight, sendExpectedWeight]);
+
+      const updateQuantity = useCallback((barcode, delta) => {
+        setCartItems((prev) => {
+          const item = prev.find((i) => i.product.barcode === barcode);
+          if (!item) return prev;
+          const newQty = item.quantity + delta;
+          if (newQty <= 0) {
+            if (isDemo) setSensorData((s) => ({ ...s, actual: Math.max(0, s.actual - item.product.weight * item.quantity) }));
+            return prev.filter((i) => i.product.barcode !== barcode);
+          }
+          if (isDemo) setSensorData((s) => ({ ...s, actual: Math.max(0, s.actual + item.product.weight * delta) }));
+          return prev.map((i) => (i.product.barcode === barcode ? { ...i, quantity: newQty } : i));
+        });
+      }, [isDemo]);
+
+      const removeItem = useCallback((barcode) => {
+        setCartItems((prev) => {
+          const item = prev.find((i) => i.product.barcode === barcode);
+          if (item && isDemo) setSensorData((s) => ({ ...s, actual: Math.max(0, s.actual - item.product.weight * item.quantity) }));
+          return prev.filter((i) => i.product.barcode !== barcode);
+        });
+      }, [isDemo]);
+
+      const simulateUnscannedItem = useCallback(() => { if (isDemo) setSensorData((p) => ({ ...p, actual: p.actual + 150 })); }, [isDemo]);
+      const simulateStationary = useCallback(() => {
+        if (!isDemo) return;
+        setStationaryAlert(true); setSensorData((p) => ({ ...p, moving: false }));
+        setTimeout(() => { setStationaryAlert(false); setSensorData((p) => ({ ...p, moving: true })); }, 5000);
+      }, [isDemo]);
+
+      const toggleMode = useCallback(() => {
+        setIsDemo((prev) => {
+          if (prev) { setSensorData({ actual: 0, expected: totalExpectedWeight, moving: true }); }
+          else { setSensorData({ actual: totalExpectedWeight, expected: totalExpectedWeight, moving: true }); }
+          setStationaryAlert(false);
+          return !prev;
+        });
+      }, [totalExpectedWeight]);
+
+      return { isDemo, toggleMode, cartItems, sensorData, esp32Connected, esp32Connecting, weightMismatch, stationaryAlert, totalExpectedWeight, totalPrice, totalItems, addItemByBarcode, updateQuantity, removeItem, simulateUnscannedItem, simulateStationary };
+    }
+
+    // ==================== COMPONENTS ====================
+
+    function ModeToggle({ isDemo, onToggle, esp32Connected, esp32Connecting }) {
+      return (
+        <div className="border" style={{ borderRadius: 'var(--radius)', background: 'var(--card)', padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{ fontSize: 14, fontWeight: 600, color: isDemo ? 'var(--warning)' : 'var(--muted-foreground)' }}>DEMO</span>
+              <span className={`switch ${!isDemo ? 'active' : ''}`} onClick={onToggle}></span>
+              <span style={{ fontSize: 14, fontWeight: 600, color: !isDemo ? 'var(--success)' : 'var(--muted-foreground)' }}>LIVE</span>
+            </div>
+            {isDemo ? (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 9999, background: 'hsla(38,92%,50%,0.15)', padding: '4px 12px', fontSize: 12, fontWeight: 500, color: 'var(--warning)' }}>⚡ DEMO MODE</span>
+            ) : esp32Connected ? (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 9999, background: 'hsla(142,71%,45%,0.15)', padding: '4px 12px', fontSize: 12, fontWeight: 500, color: 'var(--success)' }}>✅ ESP32 Connected</span>
+            ) : esp32Connecting ? (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 9999, background: 'var(--muted)', padding: '4px 12px', fontSize: 12, fontWeight: 500, color: 'var(--muted-foreground)' }}>Waiting for ESP32…</span>
+            ) : (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 9999, background: 'hsla(0,84%,60%,0.15)', padding: '4px 12px', fontSize: 12, fontWeight: 500, color: 'var(--destructive)' }}>⚠️ Disconnected</span>
+            )}
+          </div>
+          {isDemo && <p style={{ marginTop: 8, fontSize: 12, color: 'var(--muted-foreground)' }}>DEMO MODE — ESP32 Not Connected. All sensor data is simulated.</p>}
+        </div>
+      );
+    }
+
+    function AlertBanners({ weightMismatch, stationaryAlert }) {
+      return (
+        <>
+          {weightMismatch && (
+            <div className="flash-alert slide-in" style={{ borderRadius: 'var(--radius)', background: 'var(--destructive)', padding: '12px 16px', textAlign: 'center', fontSize: 14, fontWeight: 700, color: 'var(--destructive-foreground)', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
+              ⚠️ WEIGHT MISMATCH DETECTED — Unscanned item may be in trolley!
+            </div>
+          )}
+          {stationaryAlert && (
+            <div className="slide-in" style={{ borderRadius: 'var(--radius)', background: 'var(--warning)', padding: '12px 16px', textAlign: 'center', fontSize: 14, fontWeight: 700, color: 'var(--warning-foreground)', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
+              🛑 Trolley has been stationary — Please move it to avoid blocking the aisle
+            </div>
+          )}
+        </>
+      );
+    }
+
+    function SensorTile({ label, value, alert }) {
+      return (
+        <div style={{ borderRadius: 8, padding: 12, textAlign: 'center', background: alert ? 'hsla(0,84%,60%,0.1)' : 'hsla(214,20%,94%,0.6)' }}>
+          <p style={{ fontSize: 12, color: 'var(--muted-foreground)' }}>{label}</p>
+          <p style={{ fontSize: 18, fontWeight: 700, color: alert ? 'var(--destructive)' : 'var(--foreground)' }}>{value}</p>
+        </div>
+      );
+    }
+
+    function SensorPanel({ actual, expected, moving, weightMismatch }) {
+      const diff = Math.abs(actual - expected);
+      return (
+        <div className="border" style={{ borderRadius: 'var(--radius)', background: 'var(--card)', padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+          <h2 style={{ marginBottom: 12, fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--muted-foreground)' }}>📡 Live Sensor Data</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <SensorTile label="Actual Weight" value={`${actual.toFixed(0)}g`} />
+            <SensorTile label="Expected Weight" value={`${expected.toFixed(0)}g`} />
+            <SensorTile label="Weight Diff" value={`${diff.toFixed(0)}g`} alert={weightMismatch} />
+            <SensorTile label="Trolley Status" value={moving ? "Moving 🟢" : "Stationary 🔴"} />
+          </div>
+          <div style={{ marginTop: 12, borderRadius: 8, padding: '8px 12px', textAlign: 'center', fontSize: 14, fontWeight: 600, background: weightMismatch ? 'hsla(0,84%,60%,0.15)' : 'hsla(142,71%,45%,0.15)', color: weightMismatch ? 'var(--destructive)' : 'var(--success)' }}>
+            {weightMismatch ? "⚠️ MISMATCH DETECTED" : "✅ System OK"}
+          </div>
+        </div>
+      );
+    }
+
+    function Cart({ items, totalExpectedWeight, totalPrice, totalItems, onRequestScanForRemoval, onCheckout }) {
+      return (
+        <div className="border" style={{ borderRadius: 'var(--radius)', background: 'var(--card)', padding: 16, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+          <h2 style={{ marginBottom: 12, fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--muted-foreground)' }}>🛒 Shopping Cart</h2>
+          {items.length === 0 ? (
+            <p style={{ padding: '32px 0', textAlign: 'center', fontSize: 14, color: 'var(--muted-foreground)' }}>Cart is empty. Scan an item to get started!</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {items.map((item) => (
+                <div key={item.product.barcode} className="cart-item-enter" style={{ display: 'flex', alignItems: 'center', gap: 12, borderRadius: 8, background: 'hsla(214,20%,94%,0.4)', padding: 12 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontWeight: 600, fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.product.name}</p>
+                    <p style={{ fontSize: 12, color: 'var(--muted-foreground)' }}>{item.product.weight}g × {item.quantity} = {item.product.weight * item.quantity}g</p>
+                    <p style={{ fontSize: 12, color: 'var(--muted-foreground)' }}>₹{item.product.price} × {item.quantity} = ₹{item.product.price * item.quantity}</p>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <button onClick={() => onRequestScanForRemoval(item.product.barcode, "decrease")} style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, background: 'var(--secondary)', color: 'var(--secondary-foreground)', cursor: 'pointer', border: 'none' }}><MinusIcon /></button>
+                    <span style={{ width: 24, textAlign: 'center', fontSize: 14, fontWeight: 700 }}>{item.quantity}</span>
+                    <button onClick={() => onRequestScanForRemoval(item.product.barcode, "increase")} style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, background: 'var(--primary)', color: 'var(--primary-foreground)', cursor: 'pointer', border: 'none' }}><PlusIcon /></button>
+                    <button onClick={() => onRequestScanForRemoval(item.product.barcode, "remove")} style={{ width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 8, background: 'hsla(0,84%,60%,0.15)', color: 'var(--destructive)', cursor: 'pointer', border: 'none', marginLeft: 4 }}><Trash2Icon /></button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          <div style={{ marginTop: 16, borderTop: '1px solid var(--border)', paddingTop: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}><span style={{ color: 'var(--muted-foreground)' }}>Items</span><span style={{ fontWeight: 600 }}>{totalItems}</span></div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}><span style={{ color: 'var(--muted-foreground)' }}>Expected Weight</span><span style={{ fontWeight: 600 }}>{totalExpectedWeight}g</span></div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 16 }}><span style={{ fontWeight: 700 }}>Total</span><span style={{ fontWeight: 700, color: 'var(--primary)' }}>₹{totalPrice}</span></div>
+          </div>
+          {items.length > 0 && (
+            <button onClick={onCheckout} style={{ marginTop: 16, width: '100%', borderRadius: 'var(--radius)', background: 'var(--primary)', padding: '12px 0', fontSize: 14, fontWeight: 700, color: 'var(--primary-foreground)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', cursor: 'pointer', border: 'none', fontFamily: 'inherit' }}>Checkout →</button>
+          )}
+        </div>
+      );
+    }
+
+    function CheckoutModal({ open, onClose, items, totalExpectedWeight, totalPrice, totalItems }) {
+      if (!open) return null;
+      return (
+        <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'hsla(215,25%,15%,0.4)', padding: 16 }}>
+          <div className="slide-in" onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: 448, borderRadius: 16, background: 'var(--card)', padding: 24, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <h2 style={{ fontSize: 18, fontWeight: 700 }}>🧾 Bill Summary</h2>
+              <button onClick={onClose} style={{ borderRadius: 8, padding: 4, cursor: 'pointer', background: 'transparent', border: 'none', color: 'var(--foreground)' }}><XIcon /></button>
+            </div>
+            <div className="border" style={{ borderRadius: 8, overflow: 'hidden' }}>
+              <table style={{ width: '100%', fontSize: 14, borderCollapse: 'collapse' }}>
+                <thead><tr style={{ background: 'var(--muted)', textAlign: 'left' }}><th style={{ padding: '8px 12px', fontWeight: 600 }}>Item</th><th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'center' }}>Qty</th><th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}>Weight</th><th style={{ padding: '8px 12px', fontWeight: 600, textAlign: 'right' }}>Price</th></tr></thead>
+                <tbody>
+                  {items.map((item) => (
+                    <tr key={item.product.barcode} style={{ borderTop: '1px solid var(--border)' }}><td style={{ padding: '8px 12px' }}>{item.product.name}</td><td style={{ padding: '8px 12px', textAlign: 'center' }}>{item.quantity}</td><td style={{ padding: '8px 12px', textAlign: 'right' }}>{item.product.weight * item.quantity}g</td><td style={{ padding: '8px 12px', textAlign: 'right' }}>₹{item.product.price * item.quantity}</td></tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 4, fontSize: 14 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--muted-foreground)' }}>Total Items</span><span style={{ fontWeight: 600 }}>{totalItems}</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ color: 'var(--muted-foreground)' }}>Total Weight</span><span style={{ fontWeight: 600 }}>{totalExpectedWeight}g</span></div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--border)', paddingTop: 8, fontSize: 18 }}><span style={{ fontWeight: 700 }}>Grand Total</span><span style={{ fontWeight: 700, color: 'var(--primary)' }}>₹{totalPrice}</span></div>
+            </div>
+            <button onClick={onClose} style={{ marginTop: 24, width: '100%', borderRadius: 'var(--radius)', background: 'var(--primary)', padding: '12px 0', fontSize: 14, fontWeight: 700, color: 'var(--primary-foreground)', cursor: 'pointer', border: 'none', fontFamily: 'inherit' }}>Done</button>
+          </div>
+        </div>
+      );
+    }
+
+    const BarcodeScanner = React.memo(function BarcodeScanner({ open, onScan, onClose }) {
+      const videoRef = useRef(null);
+      const streamRef = useRef(null);
+      const [error, setError] = useState(null);
+      const scannedRef = useRef(false);
+
+      const stopCamera = useCallback(() => {
+        if (streamRef.current) { streamRef.current.getTracks().forEach((t) => t.stop()); streamRef.current = null; }
+      }, []);
+
+      const handleClose = useCallback(() => { stopCamera(); onClose(); }, [stopCamera, onClose]);
+
+      useEffect(() => {
+        if (!open) return;
+        scannedRef.current = false; setError(null);
+        let cancelled = false;
+
+        const startScanning = async () => {
+          try {
+            const codeReader = new ZXing.BrowserMultiFormatReader();
+            const constraints = { video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 } } };
+            await codeReader.decodeFromConstraints(constraints, videoRef.current, (result, err) => {
+              if (cancelled || scannedRef.current) return;
+              if (result) {
+                scannedRef.current = true;
+                codeReader.reset();
+                stopCamera();
+                onScan(result.getText());
+              }
+            });
+            streamRef.current = videoRef.current && videoRef.current.srcObject;
+          } catch (e) { if (!cancelled) setError("Camera error: " + e.message); }
+        };
+        startScanning();
+        return () => { cancelled = true; stopCamera(); };
+      }, [open, onScan, stopCamera]);
+
+      if (!open) return null;
+      return (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 50, display: 'flex', flexDirection: 'column', background: 'hsla(215,25%,15%,0.95)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 16 }}>
+            <h2 style={{ fontSize: 14, fontWeight: 700, color: 'var(--primary-foreground)' }}>📷 Scan Barcode</h2>
+            <button onClick={handleClose} style={{ borderRadius: 8, background: 'hsla(0,0%,100%,0.2)', padding: 8, color: 'var(--primary-foreground)', cursor: 'pointer', border: 'none' }}><XIcon /></button>
+          </div>
+          <div style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <video ref={videoRef} autoPlay playsInline muted style={{ height: '100%', width: '100%', objectFit: 'cover' }} />
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+              <div style={{ height: 192, width: 256, borderRadius: 16, border: '4px solid hsla(217,91%,50%,0.7)', boxShadow: '0 4px 12px rgba(0,0,0,0.2)' }} />
+            </div>
+            {error && <div style={{ position: 'absolute', left: 16, right: 16, top: 16, borderRadius: 8, background: 'var(--destructive)', padding: 12, textAlign: 'center', fontSize: 14, color: 'var(--destructive-foreground)' }}>{error}</div>}
+          </div>
+          <div style={{ padding: 16 }}>
+            <button onClick={handleClose} style={{ width: '100%', borderRadius: 'var(--radius)', background: 'var(--card)', padding: '12px 0', fontSize: 14, fontWeight: 700, color: 'var(--foreground)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', cursor: 'pointer', border: 'none', fontFamily: 'inherit' }}>Cancel</button>
+          </div>
+        </div>
+      );
+    }); // end BarcodeScanner memo
+
+    // ==================== MAIN APP ====================
+    function App() {
+      const trolley = useTrolley();
+      const [scannerOpen, setScannerOpen] = useState(false);
+      const [checkoutOpen, setCheckoutOpen] = useState(false);
+      const pendingRemoval = useRef(null);
+
+      const handleScan = useCallback((barcode) => {
+        setScannerOpen(false);
+        if (pendingRemoval.current) {
+          const { barcode: expectedBarcode, action } = pendingRemoval.current;
+          pendingRemoval.current = null;
+          if (barcode !== expectedBarcode) { toast.error("❌ Scanned product doesn't match. Please scan the correct item."); return; }
+          if (action === "decrease") { trolley.updateQuantity(barcode, -1); toast.success("✅ Quantity decreased"); }
+          else if (action === "increase") { trolley.updateQuantity(barcode, 1); toast.success("✅ Quantity increased"); }
+          else { trolley.removeItem(barcode); toast.success("✅ Item removed from cart"); }
+          return;
+        }
+        const result = trolley.addItemByBarcode(barcode);
+        if (result.success && result.product) toast.success(`✅ Item Added: ${result.product.name}`);
+        else toast.error("❌ Product not found in database");
+      }, [trolley]);
+
+      const handleScannerClose = useCallback(() => { setScannerOpen(false); pendingRemoval.current = null; }, []);
+
+      const handleRequestScanForRemoval = useCallback((barcode, action) => {
+        pendingRemoval.current = { barcode, action };
+        setScannerOpen(true);
+        toast.info(`📷 Scan the product to confirm ${action === "increase" ? "quantity increase" : action === "decrease" ? "quantity decrease" : "removal"}`);
+      }, []);
+
+      return (
+        <div style={{ minHeight: '100vh', background: 'var(--background)' }}>
+          <ToastContainer />
+          <header style={{ position: 'sticky', top: 0, zIndex: 30, borderBottom: '1px solid var(--border)', background: 'var(--primary)', padding: '12px 16px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+            <h1 style={{ textAlign: 'center', fontSize: 18, fontWeight: 800, letterSpacing: '-0.01em', color: 'var(--primary-foreground)' }}>🛒 Smart Shopping Trolley</h1>
+          </header>
+          <main style={{ maxWidth: 512, margin: '0 auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <ModeToggle isDemo={trolley.isDemo} onToggle={trolley.toggleMode} esp32Connected={trolley.esp32Connected} esp32Connecting={trolley.esp32Connecting} />
+            <AlertBanners weightMismatch={trolley.weightMismatch} stationaryAlert={trolley.stationaryAlert} />
+            <button onClick={() => setScannerOpen(true)} style={{ width: '100%', borderRadius: 'var(--radius)', background: 'var(--primary)', padding: '16px 0', fontSize: 16, fontWeight: 700, color: 'var(--primary-foreground)', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', cursor: 'pointer', border: 'none', fontFamily: 'inherit' }}>
+              <ScanLineIcon /> Scan Item
+            </button>
+            {trolley.isDemo && (
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button onClick={trolley.simulateUnscannedItem} style={{ flex: 1, borderRadius: 'var(--radius)', background: 'hsla(0,84%,60%,0.15)', padding: '12px 0', fontSize: 12, fontWeight: 600, color: 'var(--destructive)', cursor: 'pointer', border: 'none', fontFamily: 'inherit' }}><ZapIcon /> Simulate Unscanned Item</button>
+                <button onClick={trolley.simulateStationary} style={{ flex: 1, borderRadius: 'var(--radius)', background: 'hsla(38,92%,50%,0.15)', padding: '12px 0', fontSize: 12, fontWeight: 600, color: 'var(--warning)', cursor: 'pointer', border: 'none', fontFamily: 'inherit' }}><PauseIcon /> Simulate Stationary</button>
+              </div>
+            )}
+            <SensorPanel actual={trolley.sensorData.actual} expected={trolley.totalExpectedWeight} moving={trolley.sensorData.moving} weightMismatch={trolley.weightMismatch} />
+            <Cart items={trolley.cartItems} totalExpectedWeight={trolley.totalExpectedWeight} totalPrice={trolley.totalPrice} totalItems={trolley.totalItems} onRequestScanForRemoval={handleRequestScanForRemoval} onCheckout={() => setCheckoutOpen(true)} />
+          </main>
+          <BarcodeScanner open={scannerOpen} onScan={handleScan} onClose={handleScannerClose} />
+          <CheckoutModal open={checkoutOpen} onClose={() => setCheckoutOpen(false)} items={trolley.cartItems} totalExpectedWeight={trolley.totalExpectedWeight} totalPrice={trolley.totalPrice} totalItems={trolley.totalItems} />
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
