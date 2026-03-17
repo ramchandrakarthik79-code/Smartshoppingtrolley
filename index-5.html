@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🛒 Smart Shopping Trolley</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/@zxing/library@0.21.3/umd/index.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ===== LIGHT THEME (default) ===== */
+    :root {
+      --bg: #fdf6ee;
+      --card: #fffaf4;
+      --card2: #fef3e2;
+      --green: #c45c00;
+      --green2: #e07820;
+      --green-light: rgba(196,92,0,0.08);
+      --gold: #b84500;
+      --gold2: #f08030;
+      --gold-light: rgba(240,128,48,0.15);
+      --cream: #fff8f0;
+      --text: #1a1008;
+      --text3: #8a6a50;
+      --red: #c0392b;
+      --red-light: rgba(192,57,43,0.1);
+      --border: rgba(196,92,0,0.14);
+      --shadow: 0 4px 24px rgba(196,92,0,0.10);
+      --shadow-lg: 0 12px 48px rgba(196,92,0,0.16);
+      --radius: 16px;
+      --radius-sm: 10px;
+      --bg-glow1: rgba(240,128,48,0.09);
+      --bg-glow2: rgba(196,92,0,0.06);
+    }
+
+    /* ===== DARK THEME ===== */
+    [data-dark="true"] {
+      --bg: #180e06;
+      --card: #221508;
+      --card2: #2e1c0a;
+      --green: #c45c00;
+      --green2: #e07820;
+      --green-light: rgba(240,128,48,0.1);
+      --gold: #f08030;
+      --gold2: #f5a060;
+      --gold-light: rgba(240,128,48,0.12);
+      --cream: #fff0de;
+      --text: #f0e0cc;
+      --text3: #a08060;
+      --red: #e05a4a;
+      --red-light: rgba(224,90,74,0.12);
+      --border: rgba(240,128,48,0.14);
+      --shadow: 0 4px 24px rgba(0,0,0,0.4);
+      --shadow-lg: 0 12px 48px rgba(0,0,0,0.55);
+      --bg-glow1: rgba(240,128,48,0.07);
+      --bg-glow2: rgba(196,92,0,0.08);
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      transition: background 0.4s, color 0.4s;
+    }
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        radial-gradient(ellipse 80% 50% at 20% 10%, var(--bg-glow1) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 80%, var(--bg-glow2) 0%, transparent 60%);
+      pointer-events: none; z-index: 0;
+      transition: background-image 0.4s;
+    }
+
+    /* ===== ANIMATIONS ===== */
+    @keyframes welcomeFadeIn { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes welcomeFadeOut { from{opacity:1;transform:scale(1)} to{opacity:0;transform:scale(1.04)} }
+    @keyframes shimmer { 0%{background-position:-200% center} 100%{background-position:200% center} }
+    @keyframes floatLeaf { 0%,100%{transform:translateY(0) rotate(0deg)} 50%{transform:translateY(-18px) rotate(6deg)} }
+    @keyframes pulse { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.05);opacity:0.85} }
+    @keyframes headerSlide { from{transform:translateY(-100%);opacity:0} to{transform:translateY(0);opacity:1} }
+    @keyframes cardIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes cartItemIn { from{opacity:0;transform:translateX(-16px)} to{opacity:1;transform:translateX(0)} }
+    @keyframes alertPulse { 0%,100%{opacity:1} 50%{opacity:0.7} }
+    @keyframes budgetIn { from{opacity:0;transform:translateX(60px)} to{opacity:1;transform:translateX(0)} }
+    @keyframes sheetUp { from{transform:translateY(100%);opacity:0} to{transform:translateY(0);opacity:1} }
+    @keyframes modalIn { from{opacity:0;transform:scale(0.92) translateY(20px)} to{opacity:1;transform:scale(1) translateY(0)} }
+    @keyframes toastIn { from{opacity:0;transform:translateX(40px) scale(0.9)} to{opacity:1;transform:translateX(0) scale(1)} }
+    @keyframes confettiFall { 0%{transform:translateY(0) rotate(0deg) scale(1);opacity:1} 80%{opacity:1} 100%{transform:translateY(110vh) rotate(720deg) scale(0.5);opacity:0} }
+    @keyframes scanLine { 0%{top:10px} 100%{top:calc(100% - 10px)} }
+    @keyframes darkToggle { 0%{transform:rotate(0)} 100%{transform:rotate(360deg)} }
+
+    /* ===== WELCOME ===== */
+    .welcome-screen { position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(160deg,#1a0800 0%,#3a1500 40%,#6b2a00 100%);overflow:hidden; }
+    .welcome-screen.exit { animation:welcomeFadeOut 0.7s ease-in forwards; }
+    .welcome-bg-pattern { position:absolute;inset:0;opacity:0.06;background-image:repeating-linear-gradient(45deg,#e07820 0,#e07820 1px,transparent 0,transparent 50%);background-size:24px 24px; }
+    .welcome-glow { position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(224,120,32,0.2) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);animation:pulse 3s ease-in-out infinite; }
+    .welcome-leaf { position:absolute;font-size:32px;animation:floatLeaf 4s ease-in-out infinite;opacity:0.3; }
+    .welcome-content { position:relative;z-index:2;text-align:center;padding:40px 24px; }
+    .welcome-icon { font-size:72px;display:block;margin-bottom:24px;animation:welcomeFadeIn 0.8s ease-out;filter:drop-shadow(0 8px 24px rgba(201,151,42,0.4)); }
+    .welcome-title { font-family:'Playfair Display',serif;font-size:clamp(32px,8vw,52px);font-weight:900;color:#fff0de;line-height:1.1;animation:welcomeFadeIn 0.8s 0.15s both ease-out;letter-spacing:-0.02em; }
+    .welcome-gold { background:linear-gradient(90deg,#e07820,#f08030,#e07820);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 3s linear infinite,welcomeFadeIn 0.8s 0.15s both ease-out; }
+    .welcome-subtitle { margin-top:12px;font-size:16px;font-weight:300;color:rgba(245,240,232,0.65);letter-spacing:0.04em;animation:welcomeFadeIn 0.8s 0.3s both ease-out; }
+    .welcome-greeting { margin-top:32px;font-family:'Playfair Display',serif;font-size:clamp(18px,5vw,26px);color:rgba(245,240,232,0.9);font-style:italic;animation:welcomeFadeIn 0.8s 0.45s both ease-out; }
+    .welcome-divider { margin:20px auto;width:60px;height:2px;background:linear-gradient(90deg,transparent,#f08030,transparent);animation:welcomeFadeIn 0.8s 0.5s both ease-out; }
+    .welcome-tagline { font-size:14px;color:rgba(245,240,232,0.5);letter-spacing:0.1em;text-transform:uppercase;animation:welcomeFadeIn 0.8s 0.55s both ease-out; }
+    .welcome-lang-row { display:flex;gap:10px;justify-content:center;margin-top:28px;animation:welcomeFadeIn 0.8s 0.62s both ease-out; }
+    .welcome-lang-btn { padding:8px 18px;border-radius:100px;border:1px solid rgba(245,240,232,0.25);background:rgba(245,240,232,0.08);color:rgba(245,240,232,0.7);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;letter-spacing:0.04em; }
+    .welcome-lang-btn.active { background:rgba(224,120,32,0.25);border-color:rgba(201,151,42,0.6);color:#f08030; }
+    .welcome-lang-btn:hover { background:rgba(245,240,232,0.15); }
+    .welcome-btn { margin-top:28px;display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,#e07820,#f08030);color:#1a0800;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;padding:16px 36px;border-radius:100px;border:none;cursor:pointer;box-shadow:0 8px 32px rgba(224,90,0,0.35);animation:welcomeFadeIn 0.8s 0.7s both ease-out;transition:transform 0.2s,box-shadow 0.2s; }
+    .welcome-btn:hover { transform:translateY(-2px);box-shadow:0 12px 40px rgba(201,151,42,0.45); }
+    .welcome-btn:active { transform:scale(0.97); }
+    .welcome-time { margin-top:20px;font-size:13px;color:rgba(245,240,232,0.35);animation:welcomeFadeIn 0.8s 0.85s both ease-out;letter-spacing:0.06em; }
+
+    /* ===== HEADER ===== */
+    .app-header { position:sticky;top:0;z-index:30;background:var(--green);border-bottom:1px solid rgba(224,120,32,0.2);padding:0 16px;height:64px;display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 4px 24px rgba(196,92,0,0.25);animation:headerSlide 0.5s ease-out; }
+    .header-logo { display:flex;align-items:center;gap:8px;flex-shrink:0; }
+    .header-logo span { font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:#fff0de;letter-spacing:-0.01em; }
+    .header-logo em { font-style:italic;color:var(--gold2); }
+    .header-controls { display:flex;align-items:center;gap:8px; }
+    /* Language switcher */
+    .lang-switcher { display:flex;border-radius:100px;overflow:hidden;border:1px solid rgba(224,120,32,0.25);background:rgba(0,0,0,0.2); }
+    .lang-btn { padding:5px 10px;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:700;border:none;cursor:pointer;background:transparent;color:rgba(245,240,232,0.55);transition:all 0.2s;letter-spacing:0.04em; }
+    .lang-btn.active { background:linear-gradient(135deg,var(--gold),var(--gold2));color:#1a0800; }
+    /* Dark toggle */
+    .dark-toggle { width:36px;height:36px;border-radius:50%;border:1px solid rgba(224,90,0,0.3);background:rgba(0,0,0,0.2);color:#f08030;font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.3s;flex-shrink:0; }
+    .dark-toggle:hover { background:rgba(224,120,32,0.2); }
+    .dark-toggle.spinning { animation:darkToggle 0.4s ease-out; }
+    /* Badge */
+    .header-badge { display:flex;align-items:center;gap:6px;background:rgba(201,151,42,0.15);border:1px solid rgba(224,90,0,0.3);border-radius:100px;padding:4px 10px;font-size:11px;font-weight:600;color:var(--gold2);letter-spacing:0.04em;flex-shrink:0; }
+    .header-dot { width:7px;height:7px;border-radius:50%;background:var(--gold2);animation:pulse 2s infinite;flex-shrink:0; }
+
+    /* ===== MAIN ===== */
+    .app-main { position:relative;z-index:1;max-width:520px;margin:0 auto;padding:20px 16px 120px;display:flex;flex-direction:column;gap:16px; }
+
+    /* ===== CARD ===== */
+    .card { background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow);animation:cardIn 0.4s ease-out both;transition:background 0.4s,border-color 0.4s; }
+    .card-label { font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--text3);margin-bottom:14px;display:flex;align-items:center;gap:8px; }
+    .card-label::after { content:'';flex:1;height:1px;background:var(--border); }
+
+    /* ===== MODE TOGGLE ===== */
+    .mode-row { display:flex;align-items:center;justify-content:space-between; }
+    .mode-labels { display:flex;align-items:center;gap:12px; }
+    .mode-text { font-size:13px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;transition:color 0.2s; }
+    .switch { width:48px;height:26px;border-radius:13px;background:rgba(196,92,0,0.15);cursor:pointer;position:relative;transition:background 0.25s;flex-shrink:0; }
+    [data-dark="true"] .switch { background:rgba(240,128,48,0.15); }
+    .switch.active { background:var(--green2); }
+    .switch::after { content:'';position:absolute;width:22px;height:22px;border-radius:50%;background:white;top:2px;left:2px;transition:transform 0.25s cubic-bezier(0.34,1.56,0.64,1);box-shadow:0 2px 6px rgba(0,0,0,0.15); }
+    .switch.active::after { transform:translateX(22px); }
+    .status-pill { display:inline-flex;align-items:center;gap:6px;border-radius:100px;padding:5px 12px;font-size:11px;font-weight:600;letter-spacing:0.03em; }
+    .status-demo { background:rgba(201,151,42,0.12);color:var(--gold);border:1px solid rgba(224,120,32,0.25); }
+    .status-live { background:rgba(196,92,0,0.12);color:var(--green2);border:1px solid rgba(196,92,0,0.25); }
+    .status-warn { background:var(--red-light);color:var(--red);border:1px solid rgba(192,57,43,0.2); }
+    .status-wait { background:rgba(26,26,26,0.06);color:var(--text3);border:1px solid var(--border); }
+    [data-dark="true"] .status-wait { background:rgba(255,255,255,0.06); }
+    .demo-note { margin-top:10px;font-size:12px;color:var(--text3);background:var(--gold-light);border-radius:8px;padding:8px 12px;border-left:3px solid var(--gold2); }
+
+    /* ===== ALERTS ===== */
+    .alert-banner { border-radius:var(--radius-sm);padding:14px 18px;font-size:14px;font-weight:600;text-align:center;animation:cardIn 0.3s ease-out,alertPulse 1.5s ease-in-out infinite;display:flex;align-items:center;justify-content:center;gap:10px; }
+    .alert-mismatch { background:linear-gradient(135deg,#c0392b,#e74c3c);color:white;box-shadow:0 4px 16px rgba(192,57,43,0.3); }
+    .alert-stationary { background:linear-gradient(135deg,#c45c00,#e07820);color:white;box-shadow:0 4px 16px rgba(224,90,0,0.3); }
+
+    /* ===== SCAN BUTTON ===== */
+    .scan-btn { width:100%;background:linear-gradient(135deg,var(--green),var(--green2));color:var(--cream);border:none;border-radius:var(--radius);padding:20px;font-family:'Playfair Display',serif;font-size:18px;font-weight:700;letter-spacing:0.02em;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px;box-shadow:0 6px 24px rgba(196,92,0,0.25);transition:transform 0.18s,box-shadow 0.18s;position:relative;overflow:hidden; }
+    .scan-btn::before { content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 40%,rgba(201,151,42,0.12)); }
+    .scan-btn:hover { transform:translateY(-2px);box-shadow:0 10px 32px rgba(196,92,0,0.3); }
+    .scan-btn:active { transform:scale(0.98); }
+
+    /* ===== DEMO BUTTONS ===== */
+    .demo-row { display:grid;grid-template-columns:1fr 1fr;gap:10px; }
+    .demo-btn { border-radius:var(--radius-sm);padding:12px 10px;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;border:1px solid;display:flex;align-items:center;justify-content:center;gap:6px;transition:transform 0.15s,box-shadow 0.15s; }
+    .demo-btn:hover { transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,0.1); }
+    .demo-btn:active { transform:scale(0.97); }
+    .demo-btn-red { background:var(--red-light);color:var(--red);border-color:rgba(192,57,43,0.2); }
+    .demo-btn-gold { background:var(--gold-light);color:var(--gold);border-color:rgba(224,90,0,0.3); }
+
+    /* ===== SENSOR ===== */
+    .sensor-grid { display:grid;grid-template-columns:1fr 1fr;gap:10px; }
+    .sensor-tile { border-radius:var(--radius-sm);padding:14px;text-align:center;background:var(--card2);border:1px solid var(--border);transition:background 0.3s; }
+    .sensor-tile.alert { background:var(--red-light);border-color:rgba(192,57,43,0.2); }
+    .sensor-tile-label { font-size:11px;color:var(--text3);font-weight:500;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:6px; }
+    .sensor-tile-val { font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--text); }
+    .sensor-tile.alert .sensor-tile-val { color:var(--red); }
+    .sensor-status { margin-top:12px;border-radius:8px;padding:10px 14px;text-align:center;font-size:13px;font-weight:700;letter-spacing:0.03em;transition:all 0.3s; }
+    .sensor-ok { background:rgba(196,92,0,0.1);color:var(--green2); }
+    .sensor-err { background:var(--red-light);color:var(--red); }
+
+    /* ===== CART ===== */
+    .cart-item { display:flex;align-items:center;gap:12px;padding:14px;border-radius:var(--radius-sm);background:var(--card2);border:1px solid var(--border);transition:all 0.2s;animation:cartItemIn 0.35s ease-out both; }
+    .cart-item:hover { box-shadow:0 4px 12px rgba(196,92,0,0.08); }
+    .cart-item-emoji { font-size:28px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:var(--green-light);border-radius:10px;flex-shrink:0; }
+    .cart-item-info { flex:1;min-width:0; }
+    .cart-item-name { font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+    .cart-item-meta { font-size:12px;color:var(--text3);margin-top:2px; }
+    .cart-item-price { font-size:13px;font-weight:700;color:var(--green2);margin-top:2px; }
+    .cart-qty-row { display:flex;align-items:center;gap:6px;flex-shrink:0; }
+    .qty-btn { width:30px;height:30px;border-radius:8px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;transition:transform 0.15s; }
+    .qty-btn:active { transform:scale(0.9); }
+    .qty-btn-minus { background:var(--green-light);color:var(--green2); }
+    .qty-btn-plus { background:var(--green);color:var(--cream); }
+    .qty-btn-del { background:var(--red-light);color:var(--red);margin-left:4px;font-size:14px; }
+    .qty-num { width:22px;text-align:center;font-size:14px;font-weight:700; }
+    .cart-empty { text-align:center;padding:40px 20px;color:var(--text3); }
+    .cart-empty-icon { font-size:48px;margin-bottom:12px;opacity:0.4; }
+    .cart-empty-text { font-size:14px; }
+    .cart-summary { margin-top:16px;padding-top:14px;border-top:1px solid var(--border); }
+    .cart-summary-row { display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;color:var(--text3); }
+    .cart-summary-row span:last-child { font-weight:600;color:var(--text); }
+    .cart-total-row { display:flex;justify-content:space-between;font-size:18px;font-family:'Playfair Display',serif;font-weight:700;padding-top:10px;border-top:1px solid var(--border);margin-top:8px; }
+    .cart-total-row span:last-child { color:var(--green2); }
+    .checkout-btn { margin-top:18px;width:100%;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#1a0800;border:none;border-radius:var(--radius);padding:16px;font-family:'Playfair Display',serif;font-size:17px;font-weight:700;cursor:pointer;box-shadow:0 6px 20px rgba(224,90,0,0.3);transition:transform 0.18s,box-shadow 0.18s;letter-spacing:0.01em; }
+    .checkout-btn:hover { transform:translateY(-2px);box-shadow:0 10px 28px rgba(201,151,42,0.4); }
+    .checkout-btn:active { transform:scale(0.98); }
+
+    /* ===== BUDGET PILL ===== */
+    .budget-pill { position:fixed;bottom:28px;right:16px;z-index:40;background:var(--green);border-radius:16px;padding:12px 16px;box-shadow:0 8px 32px rgba(196,92,0,0.3);border:1px solid rgba(224,120,32,0.25);animation:budgetIn 0.5s cubic-bezier(0.34,1.56,0.64,1) both;cursor:pointer;transition:transform 0.2s;min-width:150px; }
+    .budget-pill:hover { transform:scale(1.03); }
+    .budget-pill-top { display:flex;align-items:center;justify-content:space-between;margin-bottom:8px; }
+    .budget-pill-label { font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:rgba(245,240,232,0.5); }
+    .budget-pill-edit { font-size:11px;color:var(--gold2);cursor:pointer; }
+    .budget-pill-remaining { font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:#fff0de; }
+    .budget-pill-remaining.warn { color:#e8a04b; }
+    .budget-pill-remaining.over { color:#e87070; }
+    .budget-bar-bg { margin-top:8px;height:4px;border-radius:2px;background:rgba(245,240,232,0.15);overflow:hidden; }
+    .budget-bar-fill { height:100%;border-radius:2px;transition:width 0.5s cubic-bezier(0.4,0,0.2,1); }
+    .budget-bar-ok { background:linear-gradient(90deg,var(--gold),var(--gold2)); }
+    .budget-bar-warn { background:linear-gradient(90deg,#e8a04b,#f08030); }
+    .budget-bar-over { background:linear-gradient(90deg,#c0392b,#e74c3c); }
+    .budget-sub { font-size:11px;color:rgba(245,240,232,0.4);margin-top:5px; }
+
+    /* ===== BUDGET MODAL ===== */
+    .overlay-bg { position:fixed;inset:0;z-index:100;background:rgba(15,35,24,0.65);backdrop-filter:blur(4px);display:flex;align-items:flex-end;justify-content:center;padding:16px; }
+    .budget-modal { width:100%;max-width:420px;background:var(--card);border-radius:24px 24px 16px 16px;padding:28px 24px;animation:sheetUp 0.4s cubic-bezier(0.34,1.26,0.64,1);box-shadow:0 -8px 40px rgba(196,92,0,0.2); }
+    .budget-modal h3 { font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--green2);margin-bottom:8px; }
+    .budget-modal p { font-size:13px;color:var(--text3);margin-bottom:20px; }
+    .budget-input-wrap { position:relative;margin-bottom:20px; }
+    .budget-input-prefix { position:absolute;left:16px;top:50%;transform:translateY(-50%);font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--green2); }
+    .budget-input { width:100%;padding:16px 16px 16px 40px;border:2px solid var(--border);border-radius:var(--radius-sm);font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:var(--text);background:var(--card2);outline:none;transition:border-color 0.2s; }
+    .budget-input:focus { border-color:var(--green2); }
+    .budget-modal-btn { width:100%;background:var(--green);color:var(--cream);border:none;border-radius:var(--radius-sm);padding:16px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:0.04em;transition:background 0.2s; }
+    .budget-modal-btn:hover { background:var(--green2); }
+
+    /* ===== CHECKOUT MODAL ===== */
+    .modal-overlay { position:fixed;inset:0;z-index:100;background:rgba(15,35,24,0.65);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:16px; }
+    .modal-box { width:100%;max-width:440px;background:var(--card);border-radius:24px;overflow:hidden;box-shadow:var(--shadow-lg);animation:modalIn 0.4s cubic-bezier(0.34,1.1,0.64,1);max-height:90vh;overflow-y:auto; }
+    .modal-header { background:linear-gradient(135deg,var(--green),var(--green2));padding:28px 24px 24px;position:relative; }
+    .modal-header h2 { font-family:'Playfair Display',serif;font-size:24px;font-weight:700;color:#fff0de;margin-bottom:4px; }
+    .modal-header p { font-size:13px;color:rgba(245,240,232,0.6); }
+    .modal-close { position:absolute;top:20px;right:20px;background:rgba(245,240,232,0.15);border:none;color:#fff0de;border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:background 0.2s; }
+    .modal-close:hover { background:rgba(245,240,232,0.25); }
+    .modal-body { padding:24px; }
+    .bill-table { width:100%;border-collapse:collapse;font-size:13px; }
+    .bill-table th { text-align:left;padding:8px 10px;background:var(--card2);color:var(--text3);font-weight:600;font-size:11px;letter-spacing:0.06em;text-transform:uppercase; }
+    .bill-table th:last-child { text-align:right; }
+    .bill-table td { padding:10px;border-top:1px solid var(--border);color:var(--text);font-weight:500; }
+    .bill-table td:last-child { text-align:right;font-weight:700;color:var(--green2); }
+    .bill-total-section { margin-top:16px;padding-top:14px;border-top:2px solid var(--border); }
+    .bill-row { display:flex;justify-content:space-between;font-size:13px;color:var(--text3);margin-bottom:6px; }
+    .bill-row span:last-child { font-weight:600;color:var(--text); }
+    .bill-grand { display:flex;justify-content:space-between;font-family:'Playfair Display',serif;font-size:22px;font-weight:700;padding-top:12px;border-top:1px solid var(--border);margin-top:10px; }
+    .bill-grand span:last-child { color:var(--green2); }
+    .qr-section { margin-top:24px;padding:20px;background:var(--card2);border-radius:var(--radius-sm);border:1px solid var(--border);text-align:center; }
+    .qr-section h4 { font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:var(--green2);margin-bottom:6px; }
+    .qr-section p { font-size:12px;color:var(--text3);margin-bottom:16px; }
+    .qr-canvas-wrap { display:inline-flex;align-items:center;justify-content:center;background:white;padding:12px;border-radius:12px;box-shadow:0 4px 16px rgba(196,92,0,0.1);margin-bottom:12px; }
+    .qr-label { font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text3); }
+    .qr-verify-badge { display:inline-flex;align-items:center;gap:6px;background:rgba(196,92,0,0.1);border:1px solid rgba(196,92,0,0.2);border-radius:100px;padding:6px 14px;font-size:12px;font-weight:600;color:var(--green2);margin-top:10px; }
+    .done-btn { width:100%;background:linear-gradient(135deg,var(--green),var(--green2));color:#fff0de;border:none;border-radius:var(--radius-sm);padding:16px;font-family:'Playfair Display',serif;font-size:16px;font-weight:700;cursor:pointer;margin-top:20px;transition:transform 0.18s,box-shadow 0.18s;letter-spacing:0.02em;box-shadow:0 4px 16px rgba(196,92,0,0.2); }
+    .done-btn:hover { transform:translateY(-2px);box-shadow:0 8px 24px rgba(196,92,0,0.25); }
+
+    /* ===== CONFETTI ===== */
+    .confetti-container { position:fixed;inset:0;pointer-events:none;z-index:999;overflow:hidden; }
+    .confetti-piece { position:absolute;top:-20px;animation:confettiFall linear forwards; }
+
+    /* ===== SCANNER ===== */
+    .scanner-overlay { position:fixed;inset:0;z-index:150;background:#1a0800;display:flex;flex-direction:column; }
+    .scanner-header { display:flex;align-items:center;justify-content:space-between;padding:16px 20px;background:rgba(15,35,24,0.9);border-bottom:1px solid rgba(224,120,32,0.2); }
+    .scanner-header h2 { font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:#fff0de; }
+    .scanner-close { background:rgba(245,240,232,0.1);border:1px solid rgba(245,240,232,0.2);color:#fff0de;border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center; }
+    .scanner-video-wrap { position:relative;flex:1;overflow:hidden; }
+    .scanner-video { width:100%;height:100%;object-fit:cover; }
+    .scanner-frame-wrap { position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none; }
+    .scanner-frame { width:240px;height:180px;position:relative; }
+    .scanner-frame::before,.scanner-frame::after { content:'';position:absolute;width:40px;height:40px;border-color:#f08030;border-style:solid; }
+    .scanner-frame::before { top:0;left:0;border-width:3px 0 0 3px;border-radius:12px 0 0 0; }
+    .scanner-frame::after { bottom:0;right:0;border-width:0 3px 3px 0;border-radius:0 0 12px 0; }
+    .scanner-corner-tr { position:absolute;width:40px;height:40px;border-color:#f08030;border-style:solid;top:0;right:0;border-width:3px 3px 0 0;border-radius:0 12px 0 0; }
+    .scanner-corner-bl { position:absolute;width:40px;height:40px;border-color:#f08030;border-style:solid;bottom:0;left:0;border-width:0 0 3px 3px;border-radius:0 0 0 12px; }
+    .scanner-line { position:absolute;left:10px;right:10px;height:2px;background:linear-gradient(90deg,transparent,#f08030,transparent);animation:scanLine 2s ease-in-out infinite alternate;box-shadow:0 0 8px rgba(232,184,75,0.8); }
+    .scanner-hint { text-align:center;margin-top:20px;font-size:13px;color:rgba(245,240,232,0.5);letter-spacing:0.04em; }
+    .scanner-footer { padding:20px; }
+    .scanner-cancel-btn { width:100%;border-radius:var(--radius-sm);background:rgba(245,240,232,0.1);border:1px solid rgba(245,240,232,0.2);padding:14px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;color:#fff0de;cursor:pointer;transition:background 0.2s; }
+    .scanner-cancel-btn:hover { background:rgba(245,240,232,0.15); }
+    .scanner-error { margin:12px 20px 0;border-radius:8px;background:var(--red-light);padding:10px 14px;font-size:13px;color:var(--red);text-align:center; }
+
+    /* ===== TOAST ===== */
+    .toast-container { position:fixed;top:74px;right:12px;z-index:200;display:flex;flex-direction:column;gap:8px;max-width:320px; }
+    .toast { padding:12px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:600;color:white;box-shadow:var(--shadow-lg);animation:toastIn 0.3s cubic-bezier(0.34,1.3,0.64,1);display:flex;align-items:center;gap:8px; }
+    .toast-success { background:var(--green2); }
+    .toast-error { background:var(--red); }
+    .toast-info { background:var(--green);border:1px solid rgba(224,90,0,0.3); }
+
+    ::-webkit-scrollbar { width:6px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:rgba(196,92,0,0.2);border-radius:3px; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+  const { useState, useCallback, useRef, useEffect, createContext, useContext } = React;
+
+  // ==================== TRANSLATIONS ====================
+  const TRANSLATIONS = {
+    en: {
+      smartShopping: "Smart Shopping", trolley: "Trolley",
+      intelligentSystem: "INTELLIGENT TROLLEY SYSTEM",
+      scanTrackSave: "Scan · Track · Save",
+      goodMorning: "Good Morning", goodAfternoon: "Good Afternoon", goodEvening: "Good Evening",
+      happyShopper: "Happy Shopper",
+      startShopping: "Start Shopping",
+      demo: "Demo", live: "Live", demoMode: "⚡ Demo Mode",
+      esp32Connected: "✅ ESP32 Connected", waitingEsp32: "Waiting for ESP32…", disconnected: "⚠️ Disconnected",
+      demoNote: "ESP32 not connected — all sensor data is simulated.",
+      alertMismatch: "⚠️ Weight mismatch — unscanned item may be in trolley!",
+      alertStationary: "🛑 Trolley stationary too long — please move it",
+      scanItem: "Scan Item",
+      simUnscanned: "⚡ Simulate Unscanned", simStationary: "⏸ Simulate Stationary",
+      liveSensorData: "📡 Live Sensor Data",
+      actualWeight: "Actual Weight", expectedWeight: "Expected Weight",
+      weightDiff: "Weight Diff", status: "Status",
+      moving: "Moving 🟢", stopped: "Stopped 🔴",
+      systemOK: "✅ System OK", mismatchDetected: "⚠️ Mismatch Detected",
+      shoppingCart: "🛒 Shopping Cart",
+      cartEmpty: "Cart is empty — scan an item to get started!",
+      items: "Items", totalWeight: "Total Weight", total: "Total",
+      checkoutBtn: "Checkout & Get Bill →",
+      budget: "Budget", setBudget: "Set", editBudget: "Edit",
+      left: "left", over: "over", spent: "spent",
+      tapBudget: "Tap to set budget",
+      setBudgetTitle: "Set Your Budget",
+      setBudgetDesc: "We'll track your spending and alert you as you get close.",
+      setBudgetBtn: "Set Budget",
+      yourBill: "🧾 Your Bill", thankYou: "Thank you for shopping with us!",
+      item: "Item", qty: "Qty", wt: "Wt.", price: "Price",
+      totalItems: "Total Items", grandTotal: "Grand Total",
+      exitGate: "🚪 Exit Gate Verification",
+      exitGateDesc: "Show this QR to the security guard at the exit",
+      scanAtExit: "Scan at exit · Valid for this session only",
+      verifiedPurchase: "Verified Purchase",
+      doneHappy: "Done — Happy Shopping! 🛒",
+      scanBarcode: "📷 Scan Product Barcode",
+      alignBarcode: "Align barcode within the frame",
+      cancel: "Cancel",
+      addedToast: "Added", notFound: "Product not found in database",
+      qtyDecreased: "Quantity decreased", qtyIncreased: "Quantity increased",
+      itemRemoved: "Item removed from cart", noMatch: "Scanned product doesn't match.",
+      scanToConfirmIncrease: "Scan to confirm quantity increase",
+      scanToConfirmDecrease: "Scan to confirm decrease",
+      scanToConfirmRemove: "Scan to confirm removal",
+      offline: "OFFLINE",
+    },
+    hi: {
+      smartShopping: "स्मार्ट खरीदारी", trolley: "ट्रॉली",
+      intelligentSystem: "स्मार्ट ट्रॉली सिस्टम",
+      scanTrackSave: "स्कैन · ट्रैक · बचाएं",
+      goodMorning: "सुप्रभात", goodAfternoon: "नमस्ते", goodEvening: "शुभ संध्या",
+      happyShopper: "खुशहाल खरीदार",
+      startShopping: "खरीदारी शुरू करें",
+      demo: "डेमो", live: "लाइव", demoMode: "⚡ डेमो मोड",
+      esp32Connected: "✅ ESP32 जुड़ा है", waitingEsp32: "ESP32 का इंतजार...", disconnected: "⚠️ डिसकनेक्टेड",
+      demoNote: "ESP32 नहीं जुड़ा — सभी सेंसर डेटा सिमुलेटेड है।",
+      alertMismatch: "⚠️ वजन में गड़बड़ी — ट्रॉली में अनस्कैन्ड वस्तु हो सकती है!",
+      alertStationary: "🛑 ट्रॉली बहुत देर से रुकी है — कृपया आगे बढ़ें",
+      scanItem: "वस्तु स्कैन करें",
+      simUnscanned: "⚡ अनस्कैन्ड सिमुलेट", simStationary: "⏸ रुकावट सिमुलेट",
+      liveSensorData: "📡 लाइव सेंसर डेटा",
+      actualWeight: "वास्तविक वजन", expectedWeight: "अपेक्षित वजन",
+      weightDiff: "वजन अंतर", status: "स्थिति",
+      moving: "चल रही है 🟢", stopped: "रुकी है 🔴",
+      systemOK: "✅ सिस्टम ठीक है", mismatchDetected: "⚠️ अंतर मिला",
+      shoppingCart: "🛒 खरीदारी कार्ट",
+      cartEmpty: "कार्ट खाली है — शुरू करने के लिए वस्तु स्कैन करें!",
+      items: "वस्तुएं", totalWeight: "कुल वजन", total: "कुल",
+      checkoutBtn: "चेकआउट करें →",
+      budget: "बजट", setBudget: "सेट", editBudget: "बदलें",
+      left: "बचा", over: "अधिक", spent: "खर्च",
+      tapBudget: "बजट सेट करें",
+      setBudgetTitle: "अपना बजट सेट करें",
+      setBudgetDesc: "हम आपके खर्च पर नजर रखेंगे।",
+      setBudgetBtn: "बजट सेट करें",
+      yourBill: "🧾 आपका बिल", thankYou: "खरीदारी के लिए धन्यवाद!",
+      item: "वस्तु", qty: "मात्रा", wt: "वजन", price: "कीमत",
+      totalItems: "कुल वस्तुएं", grandTotal: "कुल रकम",
+      exitGate: "🚪 एग्जिट गेट सत्यापन",
+      exitGateDesc: "एग्जिट पर सुरक्षा गार्ड को यह QR दिखाएं",
+      scanAtExit: "एग्जिट पर स्कैन करें · केवल इस सत्र के लिए",
+      verifiedPurchase: "सत्यापित खरीद",
+      doneHappy: "हो गया — खुश रहें! 🛒",
+      scanBarcode: "📷 बारकोड स्कैन करें",
+      alignBarcode: "बारकोड को फ्रेम में रखें",
+      cancel: "रद्द करें",
+      addedToast: "जोड़ा गया", notFound: "डेटाबेस में वस्तु नहीं मिली",
+      qtyDecreased: "मात्रा कम हुई", qtyIncreased: "मात्रा बढ़ी",
+      itemRemoved: "वस्तु हटाई गई", noMatch: "स्कैन की गई वस्तु मेल नहीं खाती।",
+      scanToConfirmIncrease: "मात्रा बढ़ाने के लिए स्कैन करें",
+      scanToConfirmDecrease: "मात्रा घटाने के लिए स्कैन करें",
+      scanToConfirmRemove: "हटाने के लिए स्कैन करें",
+      offline: "ऑफलाइन",
+    },
+    mr: {
+      smartShopping: "स्मार्ट खरेदी", trolley: "ट्रॉली",
+      intelligentSystem: "स्मार्ट ट्रॉली प्रणाली",
+      scanTrackSave: "स्कॅन · ट्रॅक · बचवा",
+      goodMorning: "शुभ सकाळ", goodAfternoon: "शुभ दुपार", goodEvening: "शुभ संध्याकाळ",
+      happyShopper: "आनंदी खरेदीदार",
+      startShopping: "खरेदी सुरू करा",
+      demo: "डेमो", live: "लाइव्ह", demoMode: "⚡ डेमो मोड",
+      esp32Connected: "✅ ESP32 जोडलेले", waitingEsp32: "ESP32 ची प्रतीक्षा...", disconnected: "⚠️ डिस्कनेक्ट",
+      demoNote: "ESP32 जोडलेले नाही — सर्व सेन्सर डेटा सिम्युलेटेड आहे।",
+      alertMismatch: "⚠️ वजनात फरक — ट्रॉलीत न स्कॅन केलेली वस्तू असू शकते!",
+      alertStationary: "🛑 ट्रॉली खूप वेळ थांबली आहे — कृपया पुढे जा",
+      scanItem: "वस्तू स्कॅन करा",
+      simUnscanned: "⚡ न स्कॅन केलेले", simStationary: "⏸ थांबणे सिम्युलेट",
+      liveSensorData: "📡 थेट सेन्सर डेटा",
+      actualWeight: "वास्तविक वजन", expectedWeight: "अपेक्षित वजन",
+      weightDiff: "वजन फरक", status: "स्थिती",
+      moving: "हलत आहे 🟢", stopped: "थांबली आहे 🔴",
+      systemOK: "✅ सिस्टम ठीक आहे", mismatchDetected: "⚠️ फरक आढळला",
+      shoppingCart: "🛒 खरेदी कार्ट",
+      cartEmpty: "कार्ट रिकामी आहे — सुरू करण्यासाठी वस्तू स्कॅन करा!",
+      items: "वस्तू", totalWeight: "एकूण वजन", total: "एकूण",
+      checkoutBtn: "चेकआउट करा →",
+      budget: "बजेट", setBudget: "सेट", editBudget: "बदला",
+      left: "शिल्लक", over: "जास्त", spent: "खर्च",
+      tapBudget: "बजेट सेट करा",
+      setBudgetTitle: "तुमचे बजेट सेट करा",
+      setBudgetDesc: "आम्ही तुमच्या खर्चावर लक्ष ठेवू.",
+      setBudgetBtn: "बजेट सेट करा",
+      yourBill: "🧾 तुमचे बिल", thankYou: "आमच्यासोबत खरेदी केल्याबद्दल धन्यवाद!",
+      item: "वस्तू", qty: "प्रमाण", wt: "वजन", price: "किंमत",
+      totalItems: "एकूण वस्तू", grandTotal: "एकूण रक्कम",
+      exitGate: "🚪 एग्झिट गेट पडताळणी",
+      exitGateDesc: "एग्झिटवर सुरक्षा रक्षकाला हा QR दाखवा",
+      scanAtExit: "एग्झिटवर स्कॅन करा · केवळ या सत्रासाठी वैध",
+      verifiedPurchase: "पडताळलेली खरेदी",
+      doneHappy: "झाले — आनंदी खरेदी! 🛒",
+      scanBarcode: "📷 बारकोड स्कॅन करा",
+      alignBarcode: "बारकोड फ्रेममध्ये ठेवा",
+      cancel: "रद्द करा",
+      addedToast: "जोडले", notFound: "डेटाबेसमध्ये वस्तू सापडली नाही",
+      qtyDecreased: "प्रमाण कमी झाले", qtyIncreased: "प्रमाण वाढले",
+      itemRemoved: "वस्तू काढली", noMatch: "स्कॅन केलेली वस्तू जुळत नाही.",
+      scanToConfirmIncrease: "प्रमाण वाढवण्यासाठी स्कॅन करा",
+      scanToConfirmDecrease: "प्रमाण कमी करण्यासाठी स्कॅन करा",
+      scanToConfirmRemove: "काढण्यासाठी स्कॅन करा",
+      offline: "ऑफलाइन",
+    },
+  };
+
+  const LangContext = createContext('en');
+  const DarkContext = createContext(false);
+  function useLang() {
+    const lang = useContext(LangContext);
+    return key => TRANSLATIONS[lang]?.[key] ?? TRANSLATIONS['en'][key] ?? key;
+  }
+
+  // ==================== PRODUCTS ====================
+  const PRODUCTS = [
+    { name: "Biscuit Pack", barcode: "BISCUIT_PACK", weight: 200, price: 30, emoji: "🍪" },
+    { name: "Milk Pack",    barcode: "MILK_PACK",    weight: 500, price: 25, emoji: "🥛" },
+    { name: "Soap",         barcode: "soap",         weight: 100, price: 20, emoji: "🧼" },
+  ];
+  function findProductByBarcode(b) { return PRODUCTS.find(p => p.barcode === b) || null; }
+
+  // ==================== TOAST ====================
+  let toastId = 0, setToastsGlobal = null;
+  function toast(msg, type="info") {
+    const id = ++toastId;
+    if (setToastsGlobal) {
+      setToastsGlobal(p => [...p, { id, msg, type }]);
+      setTimeout(() => setToastsGlobal(p => p.filter(t => t.id !== id)), 3000);
+    }
+  }
+  toast.success = m => toast(m, "success");
+  toast.error   = m => toast(m, "error");
+  toast.info    = m => toast(m, "info");
+
+  function ToastContainer() {
+    const [toasts, setToasts] = useState([]);
+    useEffect(() => { setToastsGlobal = setToasts; return () => { setToastsGlobal = null; }; }, []);
+    return (
+      <div className="toast-container">
+        {toasts.map(t => (
+          <div key={t.id} className={`toast toast-${t.type}`}>
+            {t.type==="success"?"✅":t.type==="error"?"❌":"ℹ️"} {t.msg}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // ==================== CONFETTI ====================
+  const CONFETTI_COLORS = ["#e07820","#f08030","#c45c00","#f5a060","#fff0de","#b84500","#f5c080"];
+  function Confetti({ show }) {
+    const pieces = useRef(Array.from({length:80},(_,i)=>({
+      id:i, color:CONFETTI_COLORS[i%CONFETTI_COLORS.length],
+      left:Math.random()*100, delay:Math.random()*1.5,
+      duration:2.5+Math.random()*2, shape:["circle","rect","square"][i%3],
+    }))).current;
+    if (!show) return null;
+    return (
+      <div className="confetti-container">
+        {pieces.map(p => (
+          <div key={p.id} className="confetti-piece" style={{
+            left:`${p.left}%`, background:p.color,
+            animationDuration:`${p.duration}s`, animationDelay:`${p.delay}s`,
+            borderRadius:p.shape==="circle"?"50%":p.shape==="rect"?"2px":"0",
+            width:p.shape==="rect"?"8px":"10px", height:p.shape==="rect"?"16px":"10px",
+          }} />
+        ))}
+      </div>
+    );
+  }
+
+  // ==================== QR CANVAS ====================
+  function QRCanvas({ data, size=140 }) {
+    const canvasRef = useRef(null);
+    useEffect(() => {
+      if (!canvasRef.current) return;
+      const canvas = canvasRef.current, ctx = canvas.getContext("2d");
+      ctx.clearRect(0,0,size,size); ctx.fillStyle="#fff"; ctx.fillRect(0,0,size,size);
+      const hash = Array.from(data).reduce((acc,c)=>(acc*31+c.charCodeAt(0))&0xFFFFFFFF,0);
+      const GRID=21, cell=Math.floor(size/GRID), offset=Math.floor((size-cell*GRID)/2);
+      ctx.fillStyle="#c45c00";
+      for (let r=0;r<GRID;r++) for (let c=0;c<GRID;c++) {
+        const inF=(r<7&&c<7)||(r<7&&c>=GRID-7)||(r>=GRID-7&&c<7);
+        let dark=false;
+        if (inF) { const fr=r<7?r:r-(GRID-7),fc=c<7?c:c-(GRID-7); dark=(fr===0||fr===6||fc===0||fc===6)||(fr>=2&&fr<=4&&fc>=2&&fc<=4); }
+        else dark=((hash>>((r*GRID+c)%32))&1)===1;
+        if (dark) ctx.fillRect(offset+c*cell+1,offset+r*cell+1,cell-2,cell-2);
+      }
+    }, [data, size]);
+    return <canvas ref={canvasRef} width={size} height={size} style={{display:"block"}} />;
+  }
+
+  // ==================== WELCOME ====================
+  function WelcomeScreen({ onEnter, lang, setLang }) {
+    const t = key => TRANSLATIONS[lang]?.[key] ?? TRANSLATIONS['en'][key] ?? key;
+    const [exiting, setExiting] = useState(false);
+    const [timeStr, setTimeStr] = useState(""), [greeting, setGreeting] = useState("");
+    useEffect(() => {
+      const upd = () => {
+        const now=new Date(), h=now.getHours();
+        setGreeting(h<12?t('goodMorning'):h<17?t('goodAfternoon'):t('goodEvening'));
+        setTimeStr(now.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}));
+      };
+      upd(); const ti=setInterval(upd,10000); return ()=>clearInterval(ti);
+    }, [lang]);
+    const handleEnter = () => { setExiting(true); setTimeout(onEnter,650); };
+    return (
+      <div className={`welcome-screen${exiting?" exit":""}`}>
+        <div className="welcome-bg-pattern" />
+        <div className="welcome-glow" />
+        {[{top:"10%",left:"8%",d:"0s",e:"🌿"},{top:"15%",right:"10%",d:"0.8s",e:"🍃"},{top:"70%",left:"5%",d:"1.2s",e:"✨"},{top:"75%",right:"8%",d:"0.4s",e:"🌱"}].map((l,i)=>(
+          <div key={i} className="welcome-leaf" style={{top:l.top,left:l.left,right:l.right,animationDelay:l.d}}>{l.e}</div>
+        ))}
+        <div className="welcome-content">
+          <span className="welcome-icon">🛒</span>
+          <h1 className="welcome-title">{t('smartShopping').split(' ')[0]}<br /><span className="welcome-gold">{t('smartShopping').split(' ').slice(1).join(' ') || t('smartShopping')}</span></h1>
+          <p className="welcome-subtitle">{t('intelligentSystem')}</p>
+          <div className="welcome-divider" />
+          <p className="welcome-greeting">"{greeting}, {t('happyShopper')}!"</p>
+          <p className="welcome-tagline" style={{marginTop:8}}>{t('scanTrackSave')}</p>
+          <div className="welcome-lang-row">
+            {['en','hi','mr'].map(l => (
+              <button key={l} className={`welcome-lang-btn${lang===l?' active':''}`} onClick={()=>setLang(l)}>
+                {l==='en'?'EN':l==='hi'?'हि':'म'}
+              </button>
+            ))}
+          </div>
+          <button className="welcome-btn" onClick={handleEnter}><span>{t('startShopping')}</span><span>→</span></button>
+          {timeStr && <p className="welcome-time">🕐 {timeStr}</p>}
+        </div>
+      </div>
+    );
+  }
+
+  // ==================== useTrolley ====================
+  const ESP32_BASE="http://192.168.4.1", WEIGHT_THRESHOLD=50;
+  function useTrolley() {
+    const [isDemo,setIsDemo]=useState(true);
+    const [cartItems,setCartItems]=useState([]);
+    const [sensorData,setSensorData]=useState({actual:0,expected:0,moving:true});
+    const [esp32Connected,setEsp32Connected]=useState(false);
+    const [esp32Connecting,setEsp32Connecting]=useState(false);
+    const [stationaryAlert,setStationaryAlert]=useState(false);
+    const stationaryTimer=useRef(null), pollingRef=useRef(null);
+
+    const totalExpectedWeight=cartItems.reduce((s,i)=>s+i.product.weight*i.quantity,0);
+    const totalPrice=cartItems.reduce((s,i)=>s+i.product.price*i.quantity,0);
+    const totalItems=cartItems.reduce((s,i)=>s+i.quantity,0);
+    const weightMismatch=totalExpectedWeight>0&&Math.abs(sensorData.actual-totalExpectedWeight)>WEIGHT_THRESHOLD;
+
+    const sendExpectedWeight=useCallback(async(weight)=>{
+      if(isDemo)return;
+      try{const c=new AbortController();const ti=setTimeout(()=>c.abort(),3000);await fetch(`${ESP32_BASE}/updateWeight?weight=${weight}`,{signal:c.signal,mode:"no-cors"});clearTimeout(ti);}catch{}
+    },[isDemo]);
+
+    const fetchSensorData=useCallback(async()=>{
+      try{const c=new AbortController();const ti=setTimeout(()=>c.abort(),3000);const res=await fetch(`${ESP32_BASE}/getData`,{signal:c.signal});clearTimeout(ti);if(!res.ok)return null;return await res.json();}catch{return null;}
+    },[]);
+
+    useEffect(()=>{
+      if(isDemo){if(pollingRef.current)clearInterval(pollingRef.current);setEsp32Connected(false);setEsp32Connecting(false);return;}
+      setEsp32Connecting(true);setEsp32Connected(false);
+      const ld={actual:0,expected:0,moving:true};
+      const poll=async()=>{
+        const data=await fetchSensorData();
+        if(data){
+          const changed=data.actual!==ld.actual||data.expected!==ld.expected||data.moving!==ld.moving;
+          if(changed){ld.actual=data.actual;ld.expected=data.expected;ld.moving=data.moving;setSensorData(data);}
+          setEsp32Connected(true);setEsp32Connecting(false);
+          if(!data.moving){if(!stationaryTimer.current)stationaryTimer.current=setTimeout(()=>setStationaryAlert(true),60000);}
+          else{if(stationaryTimer.current){clearTimeout(stationaryTimer.current);stationaryTimer.current=null;}setStationaryAlert(false);}
+        }else{setEsp32Connected(false);setEsp32Connecting(true);}
+      };
+      poll();pollingRef.current=setInterval(poll,2000);
+      return()=>{if(pollingRef.current)clearInterval(pollingRef.current);if(stationaryTimer.current)clearTimeout(stationaryTimer.current);};
+    },[isDemo,fetchSensorData]);
+
+    useEffect(()=>{if(isDemo)setSensorData(p=>({...p,expected:totalExpectedWeight}));},[isDemo,totalExpectedWeight]);
+
+    const addItemByBarcode=useCallback((barcode)=>{
+      const product=findProductByBarcode(barcode);
+      if(!product)return{success:false};
+      setCartItems(prev=>{const ex=prev.find(i=>i.product.barcode===barcode);if(ex)return prev.map(i=>i.product.barcode===barcode?{...i,quantity:i.quantity+1}:i);return[...prev,{product,quantity:1}];});
+      if(isDemo)setSensorData(p=>({...p,actual:p.actual+product.weight,expected:totalExpectedWeight+product.weight}));
+      return{success:true,product};
+    },[isDemo,totalExpectedWeight]);
+
+    useEffect(()=>{sendExpectedWeight(totalExpectedWeight);},[totalExpectedWeight,sendExpectedWeight]);
+
+    const updateQuantity=useCallback((barcode,delta)=>{
+      setCartItems(prev=>{
+        const item=prev.find(i=>i.product.barcode===barcode);if(!item)return prev;
+        const newQty=item.quantity+delta;
+        if(newQty<=0){if(isDemo)setSensorData(s=>({...s,actual:Math.max(0,s.actual-item.product.weight*item.quantity)}));return prev.filter(i=>i.product.barcode!==barcode);}
+        if(isDemo)setSensorData(s=>({...s,actual:Math.max(0,s.actual+item.product.weight*delta)}));
+        return prev.map(i=>i.product.barcode===barcode?{...i,quantity:newQty}:i);
+      });
+    },[isDemo]);
+
+    const removeItem=useCallback((barcode)=>{
+      setCartItems(prev=>{const item=prev.find(i=>i.product.barcode===barcode);if(item&&isDemo)setSensorData(s=>({...s,actual:Math.max(0,s.actual-item.product.weight*item.quantity)}));return prev.filter(i=>i.product.barcode!==barcode);});
+    },[isDemo]);
+
+    const simulateUnscannedItem=useCallback(()=>{if(isDemo)setSensorData(p=>({...p,actual:p.actual+150}));},[isDemo]);
+    const simulateStationary=useCallback(()=>{
+      if(!isDemo)return;
+      setStationaryAlert(true);setSensorData(p=>({...p,moving:false}));
+      setTimeout(()=>{setStationaryAlert(false);setSensorData(p=>({...p,moving:true}));},5000);
+    },[isDemo]);
+
+    const toggleMode=useCallback(()=>{
+      setIsDemo(prev=>{
+        if(prev)setSensorData({actual:0,expected:totalExpectedWeight,moving:true});
+        else setSensorData({actual:totalExpectedWeight,expected:totalExpectedWeight,moving:true});
+        setStationaryAlert(false);return!prev;
+      });
+    },[totalExpectedWeight]);
+
+    return{isDemo,toggleMode,cartItems,sensorData,esp32Connected,esp32Connecting,weightMismatch,stationaryAlert,totalExpectedWeight,totalPrice,totalItems,addItemByBarcode,updateQuantity,removeItem,simulateUnscannedItem,simulateStationary};
+  }
+
+  // ==================== BUDGET PILL ====================
+  function BudgetPill({ spent }) {
+    const t = useLang();
+    const [budget,setBudget]=useState(0);
+    const [showModal,setShowModal]=useState(false);
+    const [inputVal,setInputVal]=useState("");
+    const remaining=budget>0?budget-spent:null;
+    const pct=budget>0?Math.min((spent/budget)*100,100):0;
+    const isWarn=budget>0&&remaining!==null&&remaining<budget*0.2&&remaining>=0;
+    const isOver=remaining!==null&&remaining<0;
+    const handleSet=()=>{const v=parseFloat(inputVal);if(!isNaN(v)&&v>0){setBudget(v);setShowModal(false);}};
+    return (
+      <>
+        <div className="budget-pill" onClick={()=>setShowModal(true)}>
+          <div className="budget-pill-top">
+            <span className="budget-pill-label">💰 {t('budget')}</span>
+            <span className="budget-pill-edit">{budget>0?t('editBudget'):t('setBudget')}</span>
+          </div>
+          {budget>0 ? (
+            <>
+              <div className={`budget-pill-remaining${isOver?" over":isWarn?" warn":""}`}>
+                {isOver?"-":""}₹{Math.abs(remaining).toFixed(0)} {isOver?t('over'):t('left')}
+              </div>
+              <div className="budget-bar-bg">
+                <div className={`budget-bar-fill ${isOver?"budget-bar-over":isWarn?"budget-bar-warn":"budget-bar-ok"}`} style={{width:`${pct}%`}} />
+              </div>
+              <div className="budget-sub">₹{spent} {t('spent')} / ₹{budget}</div>
+            </>
+          ) : (
+            <div style={{fontSize:12,color:"rgba(245,240,232,0.5)",marginTop:4}}>{t('tapBudget')}</div>
+          )}
+        </div>
+        {showModal && (
+          <div className="overlay-bg" onClick={()=>setShowModal(false)}>
+            <div className="budget-modal" onClick={e=>e.stopPropagation()}>
+              <h3>{t('setBudgetTitle')}</h3>
+              <p>{t('setBudgetDesc')}</p>
+              <div className="budget-input-wrap">
+                <span className="budget-input-prefix">₹</span>
+                <input className="budget-input" type="number" placeholder="0" value={inputVal} onChange={e=>setInputVal(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleSet()} autoFocus />
+              </div>
+              <button className="budget-modal-btn" onClick={handleSet}>{t('setBudgetBtn')}</button>
+            </div>
+          </div>
+        )}
+      </>
+    );
+  }
+
+  // ==================== CHECKOUT MODAL ====================
+  function CheckoutModal({ open, onClose, items, totalExpectedWeight, totalPrice, totalItems }) {
+    const t = useLang();
+    const [showConfetti,setShowConfetti]=useState(false);
+    useEffect(()=>{if(open){setShowConfetti(true);const ti=setTimeout(()=>setShowConfetti(false),3500);return()=>clearTimeout(ti);}}, [open]);
+    if(!open)return null;
+    const qrData=JSON.stringify({items:items.map(i=>({n:i.product.name,q:i.quantity,p:i.product.price*i.quantity})),total:totalPrice,wt:totalExpectedWeight,ts:Date.now()});
+    return (
+      <>
+        <Confetti show={showConfetti} />
+        <div className="modal-overlay" onClick={onClose}>
+          <div className="modal-box" onClick={e=>e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>{t('yourBill')}</h2>
+              <p>{t('thankYou')}</p>
+              <button className="modal-close" onClick={onClose}>✕</button>
+            </div>
+            <div className="modal-body">
+              <table className="bill-table">
+                <thead><tr><th>{t('item')}</th><th style={{textAlign:"center"}}>{t('qty')}</th><th style={{textAlign:"right"}}>{t('wt')}</th><th>{t('price')}</th></tr></thead>
+                <tbody>
+                  {items.map(item=>(
+                    <tr key={item.product.barcode}>
+                      <td>{item.product.emoji} {item.product.name}</td>
+                      <td style={{textAlign:"center"}}>{item.quantity}</td>
+                      <td style={{textAlign:"right",color:"var(--text3)"}}>{item.product.weight*item.quantity}g</td>
+                      <td>₹{item.product.price*item.quantity}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div className="bill-total-section">
+                <div className="bill-row"><span>{t('totalItems')}</span><span>{totalItems}</span></div>
+                <div className="bill-row"><span>{t('totalWeight')}</span><span>{totalExpectedWeight}g</span></div>
+                <div className="bill-grand"><span>{t('grandTotal')}</span><span>₹{totalPrice}</span></div>
+              </div>
+              <div className="qr-section">
+                <h4>{t('exitGate')}</h4>
+                <p>{t('exitGateDesc')}</p>
+                <div className="qr-canvas-wrap"><QRCanvas data={qrData} size={140} /></div>
+                <div className="qr-label">{t('scanAtExit')}</div>
+                <div className="qr-verify-badge">
+                  <span style={{width:8,height:8,borderRadius:"50%",background:"var(--green2)",display:"inline-block"}}></span>
+                  {t('verifiedPurchase')} — ₹{totalPrice}
+                </div>
+              </div>
+              <button className="done-btn" onClick={onClose}>{t('doneHappy')}</button>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // ==================== BARCODE SCANNER ====================
+  const BarcodeScanner = React.memo(function BarcodeScanner({ open, onScan, onClose }) {
+    const t = useLang();
+    const videoRef=useRef(null),streamRef=useRef(null),scannedRef=useRef(false);
+    const [error,setError]=useState(null);
+    const stopCamera=useCallback(()=>{if(streamRef.current){streamRef.current.getTracks().forEach(t=>t.stop());streamRef.current=null;}},[]);
+    const handleClose=useCallback(()=>{stopCamera();onClose();},[stopCamera,onClose]);
+    useEffect(()=>{
+      if(!open)return;
+      scannedRef.current=false;setError(null);
+      let cancelled=false;
+      const start=async()=>{
+        try{
+          const cr=new ZXing.BrowserMultiFormatReader();
+          await cr.decodeFromConstraints({video:{facingMode:"environment",width:{ideal:1280},height:{ideal:720}}},videoRef.current,(result)=>{
+            if(cancelled||scannedRef.current)return;
+            if(result){scannedRef.current=true;cr.reset();stopCamera();onScan(result.getText());}
+          });
+          streamRef.current=videoRef.current&&videoRef.current.srcObject;
+        }catch(e){if(!cancelled)setError("Camera error: "+e.message);}
+      };
+      start();
+      return()=>{cancelled=true;stopCamera();};
+    },[open,onScan,stopCamera]);
+    if(!open)return null;
+    return (
+      <div className="scanner-overlay">
+        <div className="scanner-header">
+          <h2>{t('scanBarcode')}</h2>
+          <button className="scanner-close" onClick={handleClose}>✕</button>
+        </div>
+        <div className="scanner-video-wrap">
+          <video ref={videoRef} autoPlay playsInline muted className="scanner-video" />
+          <div className="scanner-frame-wrap">
+            <div className="scanner-frame">
+              <div className="scanner-corner-tr" /><div className="scanner-corner-bl" />
+              <div className="scanner-line" />
+            </div>
+          </div>
+          {error && <div className="scanner-error">{error}</div>}
+        </div>
+        <div className="scanner-hint">{t('alignBarcode')}</div>
+        <div className="scanner-footer"><button className="scanner-cancel-btn" onClick={handleClose}>{t('cancel')}</button></div>
+      </div>
+    );
+  });
+
+  // ==================== APP ====================
+  function App() {
+    const [showWelcome,setShowWelcome]=useState(true);
+    const [lang,setLang]=useState('en');
+    const [dark,setDark]=useState(false);
+    const [darkSpinning,setDarkSpinning]=useState(false);
+    const trolley=useTrolley();
+    const [scannerOpen,setScannerOpen]=useState(false);
+    const [checkoutOpen,setCheckoutOpen]=useState(false);
+    const pendingRemoval=useRef(null);
+
+    const t = key => TRANSLATIONS[lang]?.[key] ?? TRANSLATIONS['en'][key] ?? key;
+
+    // Apply dark mode to body
+    useEffect(()=>{
+      document.body.setAttribute('data-dark', dark ? 'true' : 'false');
+    },[dark]);
+
+    const toggleDark=()=>{
+      setDarkSpinning(true);
+      setTimeout(()=>setDarkSpinning(false),400);
+      setDark(d=>!d);
+    };
+
+    const handleScan=useCallback((barcode)=>{
+      setScannerOpen(false);
+      if(pendingRemoval.current){
+        const{barcode:eb,action}=pendingRemoval.current;
+        pendingRemoval.current=null;
+        if(barcode!==eb){toast.error(t('noMatch'));return;}
+        if(action==="decrease"){trolley.updateQuantity(barcode,-1);toast.success(t('qtyDecreased'));}
+        else if(action==="increase"){trolley.updateQuantity(barcode,1);toast.success(t('qtyIncreased'));}
+        else{trolley.removeItem(barcode);toast.success(t('itemRemoved'));}
+        return;
+      }
+      const result=trolley.addItemByBarcode(barcode);
+      if(result.success&&result.product)toast.success(`${t('addedToast')}: ${result.product.name}`);
+      else toast.error(t('notFound'));
+    },[trolley,lang]);
+
+    const handleScannerClose=useCallback(()=>{setScannerOpen(false);pendingRemoval.current=null;},[]);
+    const handleRequestScanForRemoval=useCallback((barcode,action)=>{
+      pendingRemoval.current={barcode,action};
+      setScannerOpen(true);
+      toast.info(action==="increase"?t('scanToConfirmIncrease'):action==="decrease"?t('scanToConfirmDecrease'):t('scanToConfirmRemove'));
+    },[lang]);
+
+    if(showWelcome) return (
+      <LangContext.Provider value={lang}>
+        <DarkContext.Provider value={dark}>
+          <WelcomeScreen onEnter={()=>setShowWelcome(false)} lang={lang} setLang={setLang} />
+        </DarkContext.Provider>
+      </LangContext.Provider>
+    );
+
+    return (
+      <LangContext.Provider value={lang}>
+        <DarkContext.Provider value={dark}>
+          <div style={{minHeight:"100vh"}}>
+            <ToastContainer />
+            <BudgetPill spent={trolley.totalPrice} />
+
+            {/* HEADER */}
+            <header className="app-header">
+              <div className="header-logo">
+                <span>🛒 <em>{t('trolley')}</em></span>
+              </div>
+              <div className="header-controls">
+                {/* Language switcher */}
+                <div className="lang-switcher">
+                  {['en','hi','mr'].map(l=>(
+                    <button key={l} className={`lang-btn${lang===l?' active':''}`} onClick={()=>setLang(l)}>
+                      {l==='en'?'EN':l==='hi'?'हि':'म'}
+                    </button>
+                  ))}
+                </div>
+                {/* Dark mode toggle */}
+                <button className={`dark-toggle${darkSpinning?' spinning':''}`} onClick={toggleDark} title="Toggle dark mode">
+                  {dark ? '☀️' : '🌙'}
+                </button>
+                {/* Status badge */}
+                <div className="header-badge">
+                  <div className="header-dot" />
+                  {trolley.isDemo?t('demo').toUpperCase():trolley.esp32Connected?"LIVE":t('offline')}
+                </div>
+              </div>
+            </header>
+
+            <main className="app-main">
+              {/* MODE TOGGLE */}
+              <div className="card" style={{animationDelay:"0.05s"}}>
+                <div className="mode-row">
+                  <div className="mode-labels">
+                    <span className="mode-text" style={{color:trolley.isDemo?"var(--gold)":"var(--text3)"}}>{t('demo')}</span>
+                    <div className={`switch${!trolley.isDemo?" active":""}`} onClick={trolley.toggleMode} />
+                    <span className="mode-text" style={{color:!trolley.isDemo?"var(--green2)":"var(--text3)"}}>{t('live')}</span>
+                  </div>
+                  {trolley.isDemo?<span className="status-pill status-demo">{t('demoMode')}</span>
+                    :trolley.esp32Connected?<span className="status-pill status-live">{t('esp32Connected')}</span>
+                    :trolley.esp32Connecting?<span className="status-pill status-wait">{t('waitingEsp32')}</span>
+                    :<span className="status-pill status-warn">{t('disconnected')}</span>}
+                </div>
+                {trolley.isDemo&&<p className="demo-note">{t('demoNote')}</p>}
+              </div>
+
+              {trolley.weightMismatch&&<div className="alert-banner alert-mismatch">{t('alertMismatch')}</div>}
+              {trolley.stationaryAlert&&<div className="alert-banner alert-stationary">{t('alertStationary')}</div>}
+
+              <button className="scan-btn" style={{animationDelay:"0.1s"}} onClick={()=>setScannerOpen(true)}>
+                <span style={{fontSize:22}}>📷</span><span>{t('scanItem')}</span>
+              </button>
+
+              {trolley.isDemo&&(
+                <div className="demo-row" style={{animationDelay:"0.15s"}}>
+                  <button className="demo-btn demo-btn-red" onClick={trolley.simulateUnscannedItem}>{t('simUnscanned')}</button>
+                  <button className="demo-btn demo-btn-gold" onClick={trolley.simulateStationary}>{t('simStationary')}</button>
+                </div>
+              )}
+
+              {/* SENSOR */}
+              <div className="card" style={{animationDelay:"0.2s"}}>
+                <div className="card-label">{t('liveSensorData')}</div>
+                <div className="sensor-grid">
+                  <div className="sensor-tile"><div className="sensor-tile-label">{t('actualWeight')}</div><div className="sensor-tile-val">{trolley.sensorData.actual.toFixed(0)}g</div></div>
+                  <div className="sensor-tile"><div className="sensor-tile-label">{t('expectedWeight')}</div><div className="sensor-tile-val">{trolley.totalExpectedWeight}g</div></div>
+                  <div className={`sensor-tile${trolley.weightMismatch?" alert":""}`}><div className="sensor-tile-label">{t('weightDiff')}</div><div className="sensor-tile-val">{Math.abs(trolley.sensorData.actual-trolley.totalExpectedWeight).toFixed(0)}g</div></div>
+                  <div className="sensor-tile"><div className="sensor-tile-label">{t('status')}</div><div className="sensor-tile-val" style={{fontSize:15}}>{trolley.sensorData.moving?t('moving'):t('stopped')}</div></div>
+                </div>
+                <div className={`sensor-status ${trolley.weightMismatch?"sensor-err":"sensor-ok"}`}>
+                  {trolley.weightMismatch?t('mismatchDetected'):t('systemOK')}
+                </div>
+              </div>
+
+              {/* CART */}
+              <div className="card" style={{animationDelay:"0.25s"}}>
+                <div className="card-label">{t('shoppingCart')}</div>
+                {trolley.cartItems.length===0?(
+                  <div className="cart-empty"><div className="cart-empty-icon">🛒</div><div className="cart-empty-text">{t('cartEmpty')}</div></div>
+                ):(
+                  <div style={{display:"flex",flexDirection:"column",gap:10}}>
+                    {trolley.cartItems.map(item=>(
+                      <div key={item.product.barcode} className="cart-item">
+                        <div className="cart-item-emoji">{item.product.emoji}</div>
+                        <div className="cart-item-info">
+                          <div className="cart-item-name">{item.product.name}</div>
+                          <div className="cart-item-meta">{item.product.weight}g × {item.quantity} = {item.product.weight*item.quantity}g</div>
+                          <div className="cart-item-price">₹{item.product.price*item.quantity}</div>
+                        </div>
+                        <div className="cart-qty-row">
+                          <button className="qty-btn qty-btn-minus" onClick={()=>handleRequestScanForRemoval(item.product.barcode,"decrease")}>−</button>
+                          <span className="qty-num">{item.quantity}</span>
+                          <button className="qty-btn qty-btn-plus" onClick={()=>handleRequestScanForRemoval(item.product.barcode,"increase")}>+</button>
+                          <button className="qty-btn qty-btn-del" onClick={()=>handleRequestScanForRemoval(item.product.barcode,"remove")}>🗑</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {trolley.cartItems.length>0&&(
+                  <div className="cart-summary">
+                    <div className="cart-summary-row"><span>{t('items')}</span><span>{trolley.totalItems}</span></div>
+                    <div className="cart-summary-row"><span>{t('totalWeight')}</span><span>{trolley.totalExpectedWeight}g</span></div>
+                    <div className="cart-total-row"><span>{t('total')}</span><span>₹{trolley.totalPrice}</span></div>
+                    <button className="checkout-btn" onClick={()=>setCheckoutOpen(true)}>{t('checkoutBtn')}</button>
+                  </div>
+                )}
+              </div>
+            </main>
+
+            <BarcodeScanner open={scannerOpen} onScan={handleScan} onClose={handleScannerClose} />
+            <CheckoutModal open={checkoutOpen} onClose={()=>setCheckoutOpen(false)} items={trolley.cartItems} totalExpectedWeight={trolley.totalExpectedWeight} totalPrice={trolley.totalPrice} totalItems={trolley.totalItems} />
+          </div>
+        </DarkContext.Provider>
+      </LangContext.Provider>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
